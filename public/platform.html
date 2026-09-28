@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RapidLink — Панель владельца</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+.license-key { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--accent); background: var(--bg-sunken); padding: 3px 8px; border-radius: 6px; display: inline-block; }
+.studio-card { background: var(--bg-sunken); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.studio-card .info { flex: 1; min-width: 240px; }
+.studio-card .name { font-weight: 700; font-size: 1.05rem; color: var(--fg); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.studio-card .stats-row { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; font-size: 0.86rem; }
+.studio-card .stat-mini { display: flex; flex-direction: column; gap: 2px; }
+.studio-card .stat-mini .lbl { font-size: 0.7rem; color: var(--fg-dim2); text-transform: uppercase; letter-spacing: 0.04em; }
+.studio-card .stat-mini .val { font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--fg); }
+.studio-card .stat-mini .val.ok { color: var(--ok); }
+.copy-btn { background: var(--bg-active); border: 1px solid var(--line); color: var(--fg-dim); padding: 4px 9px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-family: inherit; font-weight: 600; }
+.copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+.gen-result { background: var(--ok-dim); border: 1px solid var(--ok); border-radius: 12px; padding: 16px; margin-top: 14px; }
+.gen-result .key-line { font-family: 'JetBrains Mono', monospace; font-size: 0.84rem; color: var(--fg); padding: 4px 0; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div id="loginView" style="max-width:420px;margin:60px auto 0;">
+    <h1>Rapid<span style="color:var(--accent);">Link</span></h1>
+    <p style="color:var(--fg-dim);margin:6px 0 24px;font-size:0.9rem;">Панель владельца платформы</p>
+    <div class="card">
+      <div class="field">
+        <label>Логин</label>
+        <input id="user" class="input" placeholder="owner" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Пароль</label>
+        <input id="pass" type="password" class="input" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn-block" id="loginBtn">Войти</button>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+  </div>
+
+  <div id="mainView" style="display:none;">
+    <div class="page-head">
+      <div>
+        <h1>Панель владельца</h1>
+        <div class="sub">RapidLink · платформа записи</div>
+      </div>
+      <button class="btn btn-ghost btn-small" id="logoutBtn">Выйти</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-icon">🏢</div>
+        <div class="lbl">Студий</div>
+        <div class="val accent" id="statStudios">0</div>
+        <div class="sub">активных</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">👥</div>
+        <div class="lbl">Конечных клиентов</div>
+        <div class="val" id="statTenants">0</div>
+        <div class="sub">тенантов</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">💰</div>
+        <div class="lbl">Общий оборот</div>
+        <div class="val" id="statRevenue">0 ₽</div>
+        <div class="sub">через платформу</div>
+      </div>
+      <div class="stat stat-ok">
+        <div class="stat-icon">📈</div>
+        <div class="lbl">Ваша комиссия (3%)</div>
+        <div class="val ok" id="statCommission">0 ₽</div>
+        <div class="sub">за всё время</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="studios">Студии</button>
+      <button class="tab" data-tab="licenses">Лицензии</button>
+    </div>
+
+    <div id="tab-studios">
+      <div id="studiosWrap">
+        <div class="empty">
+          <div class="empty-icon">📭</div>
+          <div class="empty-title">Загружаем…</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-licenses" style="display:none;">
+      <div id="licensesWrap">
+        <div class="empty">
+          <div class="empty-icon">📭</div>
+          <div class="empty-title">Загружаем…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="msg" id="mainMsg"></div>
+  </div>
+</div><script>
+const API = '';
+let token = '';
+let allLicenses = [];
+
+function rub(n) { return (n || 0).toLocaleString('ru-RU') + ' ₽'; }
+
+async function api(path, opts) {
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(function() { return null; });
+  if (!res.ok) { const err = new Error((data && data.error) || 'fail'); err.status = res.status; err.data = data; throw err; }
+  return data;
+}
+
+document.getElementById('loginBtn').addEventListener('click', async function() {
+  const u = document.getElementById('user').value.trim();
+  const p = document.getElementById('pass').value;
+  const msg = document.getElementById('loginMsg');
+  if (!u || !p) { msg.className = 'msg err'; msg.textContent = 'Заполните логин и пароль'; return; }
+  msg.className = 'msg'; msg.textContent = 'Проверяем…';
+  try {
+    const res = await api('/api/platform/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    token = res.token;
+    localStorage.setItem('platform_token', token);
+    showMain();
+  } catch (e) {
+    msg.className = 'msg err';
+    msg.textContent = 'Неверный логин или пароль';
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', function() {
+  token = '';
+  localStorage.removeItem('platform_token');
+  document.getElementById('mainView').style.display = 'none';
+  document.getElementById('loginView').style.display = '';
+  document.getElementById('user').value = '';
+  document.getElementById('pass').value = '';
+});
+
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById('tab-studios').style.display = (tab.dataset.tab === 'studios') ? '' : 'none';
+    document.getElementById('tab-licenses').style.display = (tab.dataset.tab === 'licenses') ? '' : 'none';
+    if (tab.dataset.tab === 'licenses') loadLicenses();
+  });
+});
+
+async function showMain() {
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('mainView').style.display = '';
+  await loadSummary();
+  await loadStudios();
+}
+
+async function loadSummary() {
+  try {
+    const res = await api('/api/platform/summary');
+    document.getElementById('statStudios').textContent = res.studios_count;
+    document.getElementById('statTenants').textContent = res.tenants_count;
+    document.getElementById('statRevenue').textContent = rub(res.total_revenue);
+    document.getElementById('statCommission').textContent = rub(res.platform_commission);
+  } catch (e) {
+    if (e.status === 401) { document.getElementById('logoutBtn').click(); }
+  }
+}
+
+async function loadStudios() {
+  const wrap = document.getElementById('studiosWrap');
+  const msg = document.getElementById('mainMsg');
+  msg.textContent = '';
+  wrap.innerHTML = '<div class="empty"><div class="empty-title">Загружаем…</div></div>';
+  let res;
+  try {
+    res = await api('/api/platform/studios');
+  } catch (e) {
+    if (e.status === 401) { document.getElementById('logoutBtn').click(); return; }
+    wrap.innerHTML = '<div class="empty"><div class="empty-title">Не удалось загрузить</div></div>';
+    return;
+  }
+  const list = res.studios || [];
+  if (list.length === 0) {
+    wrap.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><div class="empty-title">Пока нет студий</div><div>Первая студия появится, когда кто-то активирует лицензию.</div></div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  const tierNames = { start: 'Start', business: 'Business', enterprise: 'Enterprise' };
+  list.forEach(function(s) {
+    const div = document.createElement('div');
+    div.className = 'studio-card';
+    const tierClass = 'badge-' + (s.tier || 'start');
+    const tierName = tierNames[s.tier] || s.tier;
+    div.innerHTML =
+      '<div class="info">' +
+        '<div class="name">' + (s.name || ('Студия #' + s.id)) + '<span class="badge ' + tierClass + '">' + tierName + '</span></div>' +
+        '<div class="license-key">' + (s.license_key || '') + '</div>' +
+        '<div class="stats-row">' +
+          '<div class="stat-mini"><span class="lbl">Клиентов</span><span class="val">' + s.tenants_count + '</span></div>' +
+          '<div class="stat-mini"><span class="lbl">Оборот</span><span class="val">' + rub(s.revenue) + '</span></div>' +
+          '<div class="stat-mini"><span class="lbl">Ваш 3%</span><span class="val ok">' + rub(s.commission_amount) + '</span></div>' +
+          '<div class="stat-mini"><span class="lbl">Статус</span><span class="val"><span class="badge badge-' + (s.status === 'active' ? 'ok' : 'danger') + '">' + s.status + '</span></span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="actions">' +
+        '<button class="btn btn-small btn-ghost" data-copy-license="' + (s.license_key || '') + '">Copy ключ</button>' +
+      '</div>';
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('button[data-copy-license]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const key = btn.dataset.copyLicense;
+      if (!key) return;
+      navigator.clipboard.writeText(key).then(function() {
+        btn.textContent = '✓';
+        setTimeout(function() { btn.textContent = 'Copy ключ'; }, 1200);
+      }).catch(function() { alert(key); });
+    });
+  });
+}async function loadLicenses() {
+  const wrap = document.getElementById('licensesWrap');
+  wrap.innerHTML = '<div class="empty"><div class="empty-title">Загружаем…</div></div>';
+  let res;
+  try {
+    res = await api('/api/platform/licenses');
+  } catch (e) {
+    wrap.innerHTML = '<div class="empty"><div class="empty-title">Не удалось загрузить</div></div>';
+    return;
+  }
+  allLicenses = res.licenses || [];
+  let html = '<div class="card">';
+  html += '<h3 style="margin-top:0;">Генератор лицензий</h3>';
+  html += '<p style="color:var(--fg-dim2);font-size:0.82rem;margin-bottom:14px;">Создайте пакет ключей для продажи студиям.</p>';
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">';
+  html += '<select id="genTier" class="input" style="flex:1;min-width:150px;">';
+  html += '<option value="start">Start — 200 000 ₽</option>';
+  html += '<option value="business">Business — 500 000 ₽</option>';
+  html += '<option value="enterprise">Enterprise — 1 000 000 ₽</option>';
+  html += '</select>';
+  html += '<input id="genCount" class="input" type="number" value="1" min="1" max="100" style="width:100px;">';
+  html += '<button class="btn" id="genBtn">Сгенерировать</button>';
+  html += '</div>';
+  html += '<div class="msg" id="genMsg"></div>';
+  html += '<div id="genResult"></div>';
+  html += '</div>';
+  html += '<div class="card card-pad-0"><div class="table-wrap">';
+  html += '<table class="table"><thead><tr>';
+  html += '<th>Ключ</th><th>Тариф</th><th>Статус</th><th>Студия</th><th>Лимит</th><th></th>';
+  html += '</tr></thead><tbody>';
+  if (allLicenses.length === 0) {
+    html += '<tr><td colspan="6" class="empty">Лицензий пока нет. Сгенерируйте первый пакет выше.</td></tr>';
+  }
+  allLicenses.forEach(function(l) {
+    const tierName = { start: 'Start', business: 'Business', enterprise: 'Enterprise' }[l.tier] || l.tier;
+    const limit = l.max_tenants > 0 ? l.max_tenants + ' кл.' : '∞';
+    const studioName = l.studio_name || '—';
+    html += '<tr>' +
+      '<td><span class="mono">' + l.key + '</span><button class="copy-btn" data-copy="' + l.key + '" style="margin-left:6px;">Copy</button></td>' +
+      '<td><span class="badge badge-' + l.tier + '">' + tierName + '</span></td>' +
+      '<td><span class="badge badge-' + (l.status === 'active' ? 'ok' : (l.status === 'revoked' ? 'danger' : 'accent')) + '">' + l.status + '</span></td>' +
+      '<td>' + studioName + '</td>' +
+      '<td>' + limit + '</td>' +
+      '<td>' +
+        (l.status === 'active' ? '<button class="btn btn-small btn-danger" data-revoke="' + l.id + '">Отозвать</button>' :
+        (l.status === 'revoked' ? '<button class="btn btn-small btn-ghost" data-restore="' + l.id + '">Восстановить</button>' :
+        '<span style="color:var(--fg-dim2);font-size:0.75rem;">Не активирована</span>')) +
+      '</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+  wrap.innerHTML = html;
+
+  document.getElementById('genBtn').addEventListener('click', async function() {
+    const tier = document.getElementById('genTier').value;
+    const count = parseInt(document.getElementById('genCount').value, 10) || 1;
+    const msg = document.getElementById('genMsg');
+    const resultWrap = document.getElementById('genResult');
+    msg.className = 'msg'; msg.textContent = 'Генерируем…';
+    try {
+      const r = await api('/api/platform/licenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier: tier, count: count })
+      });
+      msg.className = 'msg ok';
+      msg.textContent = '✓ Создано ' + r.count + ' лицензий';
+      resultWrap.innerHTML = '<div class="gen-result">' +
+        r.keys.map(function(k) { return '<div class="key-line">' + k + '</div>'; }).join('') +
+        '</div><div style="color:var(--fg-dim2);font-size:0.78rem;margin-top:8px;">Скопируйте ключи и передайте покупателю.</div>';
+      loadLicenses();
+      loadSummary();
+    } catch (e) {
+      msg.className = 'msg err';
+      msg.textContent = 'Ошибка: ' + e.message;
+    }
+  });
+
+  wrap.querySelectorAll('button[data-copy]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      navigator.clipboard.writeText(btn.dataset.copy).then(function() {
+        btn.textContent = '✓';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1200);
+      }).catch(function() { alert(btn.dataset.copy); });
+    });
+  });
+
+  wrap.querySelectorAll('button[data-revoke]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (!confirm('Отозвать лицензию?')) return;
+      btn.disabled = true;
+      try {
+        await api('/api/platform/licenses/' + btn.dataset.revoke, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'revoked' })
+        });
+        loadLicenses();
+      } catch (e) { alert('Ошибка: ' + e.message); btn.disabled = false; }
+    });
+  });
+
+  wrap.querySelectorAll('button[data-restore]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      btn.disabled = true;
+      try {
+        await api('/api/platform/licenses/' + btn.dataset.restore, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'issued' })
+        });
+        loadLicenses();
+      } catch (e) { alert('Ошибка: ' + e.message); btn.disabled = false; }
+    });
+  });
+}
+
+(function() {
+  const saved = localStorage.getItem('platform_token');
+  if (saved) {
+    token = saved;
+    showMain().catch(function() {
+      token = '';
+      localStorage.removeItem('platform_token');
+    });
+  }
+})();
+</script>
+<script src="/theme.js"></script>
+</body>
+</html>
