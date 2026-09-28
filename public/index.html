@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Запись онлайн — RapidLink</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+body { padding-bottom: 90px; }
+
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(10, 18, 22, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+[data-theme="light"] nav { background: rgba(247, 249, 250, 0.85); }
+nav .wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+.brand { display: flex; align-items: center; gap: 9px; font-size: 1.05rem; font-weight: 700; }
+.pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); animation: pulse 2s infinite; }
+
+.hero { max-width: 900px; margin: 0 auto; padding: 60px 20px 30px; }
+.hero h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.08; max-width: 20ch; margin-bottom: 14px; }
+.hero .lede { margin-top: 14px; max-width: 52ch; color: var(--fg-dim); font-size: 1.02rem; }
+.hero .badges { display: flex; gap: 22px; margin-top: 24px; flex-wrap: wrap; font-size: 0.84rem; color: var(--fg-dim2); }
+.hero .badges b { color: var(--fg); display: block; font-size: 1rem; margin-bottom: 2px; }
+
+.wizard-wrap { max-width: 900px; margin: 0 auto; padding: 0 20px 40px; }
+
+.steps-indicator { display: flex; gap: 0; margin: 30px 0 22px; }
+.step-dot { flex: 1; text-align: center; position: relative; padding-bottom: 14px; font-size: 0.8rem; color: var(--fg-dim2); font-weight: 500; }
+.step-dot::before {
+  content: attr(data-n);
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--bg-sunken); border: 1px solid var(--line);
+  margin: 0 auto 8px; font-weight: 700; color: var(--fg-dim2);
+}
+.step-dot.active { color: var(--fg); }
+.step-dot.active::before { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-dim); }
+.step-dot.done::before { background: var(--ok); color: #06171C; border-color: var(--ok); content: "✓"; }
+
+.panel-box { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 18px; padding: 28px; }
+.panel-box h2 { font-size: 1.3rem; margin-bottom: 6px; }
+.panel-box .hint { color: var(--fg-dim2); font-size: 0.86rem; margin-bottom: 20px; }
+
+.class-tag { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 8px 14px; border-radius: 20px; background: var(--bg-sunken); color: var(--fg-dim2); font-size: 0.85rem; font-weight: 600; }
+.class-tag.detected { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-strong); }
+
+.svc-list { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+.svc-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 14px 16px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--bg-sunken); cursor: pointer;
+}
+.svc-row:hover { border-color: var(--accent-strong); }
+.svc-row.checked { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-dim), transparent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.svc-row .left { display: flex; align-items: center; gap: 12px; flex: 1; }
+.checkbox { width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--line-strong); flex-shrink: 0; position: relative; }
+.svc-row.checked .checkbox { background: var(--accent); border-color: var(--accent); }
+.svc-row.checked .checkbox::after { content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--accent-fg); font-weight: 700; }
+.svc-row .svc-name { font-weight: 500; font-size: 0.94rem; }
+.svc-row .price { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.92rem; color: var(--accent); white-space: nowrap; }
+
+.day-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+.day-chip { flex-shrink: 0; padding: 12px 18px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-sunken); font-size: 0.85rem; text-align: center; cursor: pointer; color: var(--fg-dim); min-width: 78px; }
+.day-chip .d { font-size: 0.72rem; color: var(--fg-dim2); display: block; margin-top: 4px; }
+.day-chip.active { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-dim), transparent); color: var(--fg); }
+
+.nearest { margin-top: 16px; padding: 14px 18px; border-radius: 12px; background: var(--accent-dim); border: 1px solid var(--accent-strong); font-size: 0.88rem; color: var(--fg); }
+.nearest b { color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+.slot-group { margin-top: 22px; }
+.slot-group h4 { font-size: 0.82rem; color: var(--fg-dim2); margin-bottom: 10px; font-weight: 600; text-transform: uppercase; }
+.slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.slot { padding: 12px 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-sunken); font-size: 0.86rem; text-align: center; cursor: pointer; color: var(--fg-dim); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.slot .cap { display: block; font-size: 0.68rem; color: var(--fg-dim2); margin-top: 3px; font-weight: 400; font-family: inherit; }
+.slot.selected { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-dim), transparent); color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.slot.full { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+
+.summary { background: var(--bg-sunken); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 20px; }
+.summary-row { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 7px 0; color: var(--fg-dim); }
+.summary-row.total { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 14px; font-weight: 700; color: var(--fg); font-size: 1.1rem; }
+.summary-row.total span:last-child { font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+
+.panel-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 26px; gap: 12px; flex-wrap: wrap; }
+
+.confirm-box { text-align: center; padding: 30px 0; }
+.confirm-box .check { font-size: 4rem; color: var(--ok); margin-bottom: 16px; }
+.confirm-box .id { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; color: var(--accent); margin: 16px 0; font-weight: 700; }
+
+.sticky-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: rgba(17, 28, 33, 0.96); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 12px 16px; display: none; }
+[data-theme="light"] .sticky-bar { background: rgba(255, 255, 255, 0.96); }
+.sticky-bar.show { display: block; }
+.sticky-bar .wrap { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sticky-bar .total { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.15rem; color: var(--accent); }
+
+.lookup { max-width: 900px; margin: 40px auto 0; padding: 0 20px; }
+.lookup-toggle { font-size: 0.86rem; color: var(--fg-dim2); background: none; border: none; cursor: pointer; text-decoration: underline; font-family: inherit; }
+.lookup-panel { margin-top: 14px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: none; }
+.lookup-panel.open { display: block; }
+.lookup-result { margin-top: 14px; padding: 14px 16px; background: var(--bg-sunken); border-radius: 12px; font-size: 0.88rem; color: var(--fg-dim); }
+
+footer { border-top: 1px solid var(--line); padding: 30px 0; font-size: 0.82rem; color: var(--fg-dim2); max-width: 900px; margin: 40px auto 0; }
+footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 0 20px; }
+
+.linklike { background: none; border: none; color: var(--accent); font-size: 0.85rem; cursor: pointer; text-decoration: underline; font-family: inherit; }
+</style>
+</head><body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="pulse"></span><span id="brandName">RapidLink</span></div>
+    <button class="btn btn-small" id="topBookBtn" type="button">Записаться</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <h1 id="heroTitle">Загрузка…</h1>
+  <p class="lede" id="heroLede">Загружаем информацию…</p>
+  <div class="badges">
+    <div><b id="capacityNum">2</b>записи в час</div>
+    <div id="cityBadge">—</div>
+    <div>Мгновенное подтверждение</div>
+  </div>
+</header>
+
+<div class="wizard-wrap">
+  <div class="steps-indicator">
+    <div class="step-dot active" data-n="1" id="dot1">Услуги</div>
+    <div class="step-dot" data-n="2" id="dot2">Время</div>
+    <div class="step-dot" data-n="3" id="dot3">Контакты</div>
+  </div>
+
+  <div class="panel-box" id="step1">
+    <h2>Выберите услуги</h2>
+    <p class="hint" id="step1Hint">Загрузка…</p>
+    <div id="calcInputWrap"></div>
+    <div id="classTag" class="class-tag"><span id="classTagText">Начните вводить</span></div>
+    <div class="svc-list" id="svcList"></div>
+    <div class="panel-actions">
+      <span></span>
+      <button class="btn" id="toStep2" disabled>Далее — выбрать время</button>
+    </div>
+  </div>
+
+  <div class="panel-box" id="step2" style="display:none;">
+    <h2>Выберите дату и время</h2>
+    <p class="hint">Показываем, сколько мест осталось на каждый час</p>
+    <div class="day-chips" id="dayChips"></div>
+    <div id="nearestWrap"></div>
+    <div id="slotGroups"></div>
+    <div class="panel-actions">
+      <button class="btn btn-ghost" id="backTo1">Назад</button>
+      <button class="btn" id="toStep3" disabled>Далее — контакты</button>
+    </div>
+  </div>
+
+  <div class="panel-box" id="step3" style="display:none;">
+    <h2>Контакты и подтверждение</h2>
+    <p class="hint">Оплата на месте</p>
+    <div class="summary" id="summaryBox"></div>
+    <div class="row-2">
+      <div class="field"><label for="name">Имя</label><input id="name" required placeholder="Как к вам обращаться"></div>
+      <div class="field"><label for="phone">Телефон</label><input id="phone" type="tel" required placeholder="+7 ..."></div>
+    </div>
+    <div id="status" class="msg"></div>
+    <div class="panel-actions">
+      <button class="btn btn-ghost" id="backTo2">Назад</button>
+      <button class="btn" id="confirmBtn">Подтвердить запись</button>
+    </div>
+  </div>
+
+  <div class="panel-box" id="stepDone" style="display:none;">
+    <div class="confirm-box">
+      <div class="check">✓</div>
+      <h2>Запись подтверждена</h2>
+      <div class="id" id="bookingIdOut"></div>
+      <p class="hint" style="max-width:44ch; margin:0 auto 20px;">Сохраните номер записи — по нему и телефону можно найти или отменить запись в блоке «Моя запись» ниже.</p>
+      <button class="btn" id="newBookingBtn">Записать ещё раз</button>
+    </div>
+  </div>
+</div>
+
+<div class="lookup">
+  <button class="lookup-toggle" id="lookupToggle">Моя запись — найти или отменить</button>
+  <div class="lookup-panel" id="lookupPanel">
+    <div class="row-2">
+      <div class="field"><label for="lookupPhone">Телефон</label><input id="lookupPhone" type="tel" placeholder="+7 ..."></div>
+      <div class="field" style="display:flex; align-items:flex-end;"><button class="btn" id="lookupBtn" style="width:100%;">Найти</button></div>
+    </div>
+    <div id="lookupResult"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div id="footerName">RapidLink</div>
+    <div>Круглосуточно, без выходных</div>
+  </div>
+</footer>
+
+<div class="sticky-bar" id="stickyBar">
+  <div class="wrap">
+    <div class="total">Итого: <span id="stickyAmount">0 ₽</span></div>
+    <button class="btn" id="stickyBtn">Далее</button>
+  </div>
+</div>
+
+<script>
+const API = '';
+let CATALOG = null;
+let svcByClass = {};
+let selectedClass = null;
+let selectedServices = new Set();
+let selectedDate = null;
+let selectedHour = null;
+
+const BRAND = {
+  title: 'RapidLink',
+  accent: '#46C2E0',
+  keywords: [
+    { c: 0, k: ['мотоцикл','скутер','мопед','питбайк','cbr','ninja','ducati','harley'] },
+    { c: 1, k: ['квадроцикл','атв','atv','polaris','can-am','cfmoto','grizzly','снегоход'] },
+    { c: 2, k: ['ваз','гранта','vesta','калина','solaris','солярис','rio','logan','sandero','polo','focus','octavia','civic','corolla','camry','elantra','cerato','astra','jetta','accent'] },
+    { c: 3, k: ['creta','крета','qashqai','кашкай','sportage','tucson','rav4','cx5','tiguan','x-trail','duster','tiggo','jolion','coolray','arkana','kaptur'] },
+    { c: 4, k: ['land cruiser','крузер','patrol','уаз','патриот','niva','нива','x5','гелик','pajero','prado','defender','range rover','fortuner','tank','hilux','пикап','l200'] },
+    { c: 5, k: ['transporter','sprinter','спринтер','transit','транзит','hiace','largus','ларгус','starex','multivan','газель'] },
+    { c: 6, k: ['прицеп','trailer','мзса','скиф','экспедиция','курганприцеп'] }
+  ]
+};
+</script>
+</body>
+  </html>function rub(n) { return (n || 0).toLocaleString('ru-RU') + ' ₽'; }
+function pad(n) { return String(n).padStart(2, '0'); }
+function fmtDate(d) { return d.toISOString().slice(0, 10); }
+
+async function api(path, opts) {
+  const res = await fetch(API + path, opts);
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) { const err = new Error((data && data.error) || 'fail'); err.status = res.status; err.data = data; throw err; }
+  return data;
+}
+
+async function boot() {
+  document.getElementById('step1Hint').textContent = 'Начните вводить марку/модель — класс определится автоматически.';
+  try {
+    CATALOG = await api('/api/vertical');
+  } catch (e) {
+    document.getElementById('step1').innerHTML = '<p class="hint" style="color:var(--danger);">Не удалось загрузить каталог услуг.</p>';
+    return;
+  }
+  document.getElementById('brandName').textContent = CATALOG.businessName || BRAND.title;
+  document.getElementById('footerName').textContent = (CATALOG.businessName || BRAND.title) + (CATALOG.city ? ' · ' + CATALOG.city : '');
+  document.getElementById('cityBadge').textContent = CATALOG.city || '';
+  document.getElementById('capacityNum').textContent = CATALOG.capacity || 2;
+
+  const vc = CATALOG.vertical_code || 'wash';
+  const heroByVertical = {
+    wash: { title: 'Мойка, которая сама знает цену вашего транспорта', lede: 'Введите марку/модель — система определит класс ТС.' },
+    barber: { title: 'Стрижка, которая подходит именно вам', lede: 'Выберите категорию и услугу.' },
+    massage: { title: 'Массаж, который снимает усталость', lede: 'Выберите тип массажа.' },
+    detailing: { title: 'Детейлинг, который возвращает автомобиль к жизни', lede: 'Выберите пакет.' },
+    tire: { title: 'Шиномонтаж без очередей', lede: 'Выберите радиус колёс.' }
+  };
+  const hero = heroByVertical[vc] || { title: CATALOG.businessName || BRAND.title, lede: 'Запишитесь онлайн за минуту.' };
+  document.getElementById('heroTitle').textContent = hero.title;
+  document.getElementById('heroLede').textContent = hero.lede;
+
+  svcByClass = {};
+  (CATALOG.services || []).forEach(function(s) {
+    if (!svcByClass[s.vehicle_class]) svcByClass[s.vehicle_class] = [];
+    svcByClass[s.vehicle_class].push(s);
+  });
+
+  const isWash = vc === 'wash';
+  if (isWash) { renderCalcInput(); renderClassTag(''); }
+  else { renderClassSelect(); }
+  renderSvcList();
+  goStep(1);
+
+  document.getElementById('toStep2').addEventListener('click', function() { goStep(2); });
+  document.getElementById('backTo1').addEventListener('click', function() { goStep(1); });
+  document.getElementById('toStep3').addEventListener('click', function() { if (selectedHour !== null) goStep(3); });
+  document.getElementById('backTo2').addEventListener('click', function() { goStep(2); });
+  document.getElementById('confirmBtn').addEventListener('click', confirmBooking);
+  document.getElementById('newBookingBtn').addEventListener('click', resetWizard);
+  document.getElementById('lookupToggle').addEventListener('click', function() { document.getElementById('lookupPanel').classList.toggle('open'); });
+  document.getElementById('lookupBtn').addEventListener('click', doLookup);
+  document.getElementById('topBookBtn').addEventListener('click', function() {
+    var inp = document.getElementById('carModel') || document.getElementById('classSelect');
+    if (inp) { inp.focus(); inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  });
+}
+
+function detectClassKeyword(text) {
+  const t = text.toLowerCase().trim();
+  if (!t) return null;
+  for (const group of BRAND.keywords) {
+    for (const kw of group.k) {
+      if (t.includes(kw)) {
+        const found = CATALOG.classes.find(function(c, i) { return i === group.c; });
+        if (found) return found.id;
+      }
+    }
+  }
+  return null;
+}
+
+function renderCalcInput() {
+  const wrap = document.getElementById('calcInputWrap');
+  wrap.innerHTML = '<input id="carModel" type="text" class="input" placeholder="Например: Hyundai Creta, Yamaha Grizzly" autocomplete="off">';
+  document.getElementById('carModel').addEventListener('input', function() {
+    selectedClass = detectClassKeyword(document.getElementById('carModel').value);
+    selectedServices.clear();
+    renderClassTag(document.getElementById('carModel').value);
+    renderSvcList();
+  });
+}
+
+function renderClassSelect() {
+  const wrap = document.getElementById('calcInputWrap');
+  const options = CATALOG.classes.map(function(c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join('');
+  wrap.innerHTML = '<label>Выберите категорию</label><select id="classSelect" class="input"><option value="">— выберите —</option>' + options + '</select>';
+  document.getElementById('classSelect').addEventListener('change', function() {
+    const val = this.value ? parseInt(this.value, 10) : null;
+    selectedClass = val;
+    selectedServices.clear();
+    renderClassTag('');
+    renderSvcList();
+  });
+}
+
+function renderClassTag(rawVal) {
+  const tag = document.getElementById('classTag');
+  const tagText = document.getElementById('classTagText');
+  if (selectedClass === null || !selectedClass) {
+    tag.className = 'class-tag';
+    tagText.textContent = rawVal && rawVal.trim() ? 'Класс не распознан — уточните' : 'Начните вводить марку/модель';
+    return;
+  }
+  const cls = CATALOG.classes.find(function(c) { return c.id === selectedClass; });
+  if (!cls) { tag.className = 'class-tag'; tagText.textContent = 'Класс не распознан'; return; }
+  tag.className = 'class-tag detected';
+  tagText.textContent = '✓ ' + cls.name;
+}function renderSvcList() {
+  const list = document.getElementById('svcList');
+  if (!selectedClass) { list.innerHTML = ''; updateStep1Btn(); updateSticky(); return; }
+  const svc = svcByClass[selectedClass] || [];
+  if (svc.length === 0) { list.innerHTML = '<p class="hint">Для этой категории пока нет услуг</p>'; return; }
+  list.innerHTML = svc.map(function(s) {
+    return '<div class="svc-row" data-id="' + s.id + '"><div class="left"><div class="checkbox"></div><span class="svc-name">' + s.name + '</span></div><div class="price">' + rub(s.price) + '</div></div>';
+  }).join('');
+  list.querySelectorAll('.svc-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      const id = parseInt(row.dataset.id, 10);
+      if (selectedServices.has(id)) selectedServices.delete(id); else selectedServices.add(id);
+      row.classList.toggle('checked');
+      updateStep1Btn(); updateSticky();
+    });
+  });
+  updateStep1Btn(); updateSticky();
+}
+
+function currentTotal() {
+  if (!selectedClass) return 0;
+  const svc = svcByClass[selectedClass] || [];
+  let sum = 0;
+  svc.forEach(function(s) { if (selectedServices.has(s.id)) sum += s.price; });
+  return sum;
+}
+
+function updateStep1Btn() { document.getElementById('toStep2').disabled = selectedServices.size === 0; }
+
+function updateSticky() {
+  const bar = document.getElementById('stickyBar');
+  const amount = document.getElementById('stickyAmount');
+  const btn = document.getElementById('stickyBtn');
+  const doneVisible = document.getElementById('stepDone').style.display !== 'none';
+  const onStep1 = document.getElementById('step1').style.display !== 'none';
+  if (selectedServices.size === 0 || doneVisible || onStep1) { bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  amount.textContent = rub(currentTotal());
+  const activeStep = getActiveStep();
+  btn.textContent = activeStep === 3 ? 'Подтвердить' : 'Далее';
+  btn.onclick = function() {
+    if (activeStep === 1) goStep(2);
+    else if (activeStep === 2) { if (selectedHour !== null) goStep(3); }
+    else confirmBooking();
+  };
+}
+
+function getActiveStep() {
+  if (document.getElementById('step1').style.display !== 'none') return 1;
+  if (document.getElementById('step2').style.display !== 'none') return 2;
+  if (document.getElementById('step3').style.display !== 'none') return 3;
+  return 0;
+}
+
+function goStep(n) {
+  [1, 2, 3].forEach(function(i) {
+    document.getElementById('step' + i).style.display = (i === n) ? '' : 'none';
+    const dot = document.getElementById('dot' + i);
+    dot.classList.toggle('active', i === n);
+    dot.classList.toggle('done', i < n);
+  });
+  document.getElementById('stepDone').style.display = 'none';
+  if (n === 2) renderStep2();
+  if (n === 3) renderSummary();
+  updateSticky();
+}
+
+function next7Days() {
+  const days = [];
+  const today = new Date();
+  for (let i = 0; i < 7; i++) { const d = new Date(today); d.setDate(today.getDate() + i); days.push(d); }
+  return days;
+}
+
+async function renderStep2() {
+  if (!selectedDate) selectedDate = fmtDate(new Date());
+  const chips = document.getElementById('dayChips');
+  const days = next7Days();
+  chips.innerHTML = days.map(function(d, i) {
+    const iso = fmtDate(d);
+    const label = i === 0 ? 'Сегодня' : (i === 1 ? 'Завтра' : d.toLocaleDateString('ru-RU', { weekday: 'short' }));
+    return '<div class="day-chip ' + (iso === selectedDate ? 'active' : '') + '" data-date="' + iso + '">' + label + '<span class="d">' + d.getDate() + '</span></div>';
+  }).join('');
+  chips.querySelectorAll('.day-chip').forEach(function(ch) {
+    ch.addEventListener('click', function() { selectedDate = ch.dataset.date; selectedHour = null; renderStep2(); });
+  });
+  document.getElementById('slotGroups').innerHTML = '<p class="hint">Загружаем время…</p>';
+  document.getElementById('nearestWrap').innerHTML = '';
+  let slotsData;
+  try { slotsData = await api('/api/slots?date=' + selectedDate); }
+  catch (e) { document.getElementById('slotGroups').innerHTML = '<p class="hint" style="color:var(--danger);">Не удалось загрузить время.</p>'; return; }
+  const remainingByHour = {};
+  slotsData.slots.forEach(function(s) { remainingByHour[s.hour] = s.remaining; });
+  renderSlotGroups(remainingByHour);
+}
+
+const TIME_GROUPS = [
+  { label: 'Утро', from: 6, to: 11 },
+  { label: 'День', from: 12, to: 17 },
+  { label: 'Вечер', from: 18, to: 23 },
+  { label: 'Ночь', from: 0, to: 5 }
+];
+
+function renderSlotGroups(remainingByHour) {
+  const wrap = document.getElementById('slotGroups');
+  wrap.innerHTML = '';
+  let nearest = null;
+  for (let h = 0; h < 24; h++) { if ((remainingByHour[h] || 0) > 0) { nearest = h; break; } }
+  const nearestWrap = document.getElementById('nearestWrap');
+  if (nearest === null) {
+    nearestWrap.innerHTML = '<div class="nearest">На эту дату свободных мест нет.</div>';
+  } else if (selectedHour === null || (remainingByHour[selectedHour] || 0) <= 0) {
+    nearestWrap.innerHTML = '<div class="nearest">Ближайшее время: <b id="nearestPick">' + pad(nearest) + ':00</b></div>';
+    document.getElementById('nearestPick').addEventListener('click', function() { selectedHour = nearest; renderStep2(); });
+  }
+  TIME_GROUPS.forEach(function(group) {
+    const hours = [];
+    for (let h = group.from; h <= group.to; h++) hours.push(h);
+    const div = document.createElement('div');
+    div.className = 'slot-group';
+    div.innerHTML = '<h4>' + group.label + '</h4><div class="slots"></div>';
+    const slotsEl = div.querySelector('.slots');
+    hours.forEach(function(h) {
+      const rem = remainingByHour[h] || 0;
+      const full = rem <= 0;
+      const el = document.createElement('div');
+      el.className = 'slot' + (full ? ' full' : '') + (selectedHour === h ? ' selected' : '');
+      el.innerHTML = pad(h) + ':00<span class="cap">' + (full ? 'занято' : 'ещё ' + rem) + '</span>';
+      if (!full) el.addEventListener('click', function() { selectedHour = h; renderStep2(); updateSticky(); });
+      slotsEl.appendChild(el);
+    });
+    wrap.appendChild(div);
+  });
+  document.getElementById('toStep3').disabled = (selectedHour === null || (remainingByHour[selectedHour] || 0) <= 0);
+  updateSticky();
+}
+
+function renderSummary() {
+  const box = document.getElementById('summaryBox');
+  const svc = svcByClass[selectedClass] || [];
+  const rows = svc.filter(function(s) { return selectedServices.has(s.id); }).map(function(s) {
+    return '<div class="summary-row"><span>' + s.name + '</span><span>' + rub(s.price) + '</span></div>';
+  }).join('');
+  const cls = CATALOG.classes.find(function(c) { return c.id === selectedClass; });
+  const className = cls ? cls.name : '';
+  const dateLabel = new Date(selectedDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  box.innerHTML = '<div class="summary-row"><span>Категория</span><span>' + className + '</span></div>' + rows +
+    '<div class="summary-row"><span>Дата и время</span><span>' + dateLabel + ', ' + pad(selectedHour) + ':00</span></div>' +
+    '<div class="summary-row total"><span>Итого</span><span>' + rub(currentTotal()) + '</span></div>';
+}async function confirmBooking() {
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const status = document.getElementById('status');
+  status.className = 'msg'; status.textContent = '';
+  if (!name || !phone) { status.className = 'msg err'; status.textContent = 'Заполните имя и телефон.'; return; }
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true; status.textContent = 'Отправляем…';
+  try {
+    const res = await api('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name, phone: phone, vehicle_class_id: selectedClass,
+        service_ids: Array.from(selectedServices), date: selectedDate, hour: selectedHour
+      })
+    });
+    document.getElementById('bookingIdOut').textContent = '№ ' + res.booking.booking_code;
+    [1, 2, 3].forEach(function(i) { document.getElementById('step' + i).style.display = 'none'; });
+    document.getElementById('stepDone').style.display = '';
+    document.querySelectorAll('.step-dot').forEach(function(d) { d.classList.add('done'); });
+    status.textContent = '';
+    updateSticky();
+  } catch (e) {
+    if (e.data && e.data.error === 'slot_full') {
+      status.className = 'msg err'; status.textContent = 'Это время только что заполнилось — выберите другое.';
+      selectedHour = null;
+    } else {
+      status.className = 'msg err'; status.textContent = 'Не удалось отправить запись.';
+    }
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function resetWizard() {
+  selectedClass = null; selectedServices = new Set(); selectedHour = null;
+  document.querySelectorAll('.step-dot').forEach(function(d) { d.classList.remove('done', 'active'); });
+  const inp = document.getElementById('carModel'); if (inp) inp.value = '';
+  const sel = document.getElementById('classSelect'); if (sel) sel.value = '';
+  renderClassTag(''); renderSvcList();
+  goStep(1);
+}
+
+async function doLookup() {
+  const phone = document.getElementById('lookupPhone').value.trim();
+  const resultEl = document.getElementById('lookupResult');
+  if (!phone) { resultEl.innerHTML = '<div class="lookup-result">Введите телефон.</div>'; return; }
+  resultEl.innerHTML = '<div class="lookup-result">Ищем…</div>';
+  let bookings;
+  try {
+    const res = await api('/api/bookings?phone=' + encodeURIComponent(phone));
+    bookings = res.bookings || [];
+  } catch (e) { resultEl.innerHTML = '<div class="lookup-result">Не удалось выполнить поиск.</div>'; return; }
+  const active = bookings.filter(function(b) { return b.status === 'confirmed' || b.status === 'completed'; });
+  if (active.length === 0) { resultEl.innerHTML = '<div class="lookup-result">Записей с этим номером не найдено.</div>'; return; }
+  const svcById = {};
+  (CATALOG.services || []).forEach(function(s) { svcById[s.id] = s.name; });
+  resultEl.innerHTML = active.map(function(b) {
+    const cls = CATALOG.classes.find(function(c) { return c.id === b.vehicle_class_id; });
+    const className = cls ? cls.name : '';
+    let svcNames = '';
+    try { svcNames = JSON.parse(b.services_json).map(function(id) { return svcById[id] || '?'; }).join(', '); } catch (e) {}
+    const dateLabel = new Date(b.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    let statusBadge = '';
+    if (b.status === 'completed') statusBadge = '<div style="margin-top:10px; padding:10px 14px; background:var(--ok-dim); border-radius:8px; color:var(--ok); font-weight:700; font-size:0.86rem;">✅ Готово — можно забирать</div>';
+    else statusBadge = '<div style="margin-top:10px; padding:10px 14px; background:var(--accent-dim); border-radius:8px; color:var(--accent); font-weight:700; font-size:0.86rem;">⏳ В работе</div>';
+    const cancelBtn = (b.status === 'confirmed') ? '<div style="margin-top:10px;"><button class="linklike" data-code="' + b.booking_code + '" data-phone="' + b.phone + '">Отменить запись</button></div>' : '';
+    return '<div class="lookup-result"><b>№ ' + b.booking_code + '</b> · ' + className + ' · ' + svcNames + '<br>' + dateLabel + ', ' + pad(b.hour) + ':00 · Итого ' + rub(b.total) + statusBadge + cancelBtn + '</div>';
+  }).join('');
+  resultEl.querySelectorAll('.linklike').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      btn.disabled = true; btn.textContent = 'Отменяем…';
+      try {
+        await api('/api/bookings/' + btn.dataset.code, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: btn.dataset.phone })
+        });
+        doLookup();
+      } catch (e) { btn.disabled = false; btn.textContent = 'Не удалось, повторить'; }
+    });
+  });
+}boot();
+</script>
+<script src="/theme.js"></script>
+</body>
+  </html>
