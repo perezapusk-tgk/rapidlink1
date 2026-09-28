@@ -7,63 +7,30 @@
 <link rel="stylesheet" href="/styles.css">
 <style>
 body { padding-bottom: 90px; }
-
-nav {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: rgba(10, 18, 22, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--line);
-}
+nav { position: sticky; top: 0; z-index: 30; background: rgba(10, 18, 22, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
 [data-theme="light"] nav { background: rgba(247, 249, 250, 0.85); }
-nav .wrap {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 64px;
-}
+nav .wrap { max-width: 900px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
 .brand { display: flex; align-items: center; gap: 9px; font-size: 1.05rem; font-weight: 700; }
 .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); animation: pulse 2s infinite; }
-
 .hero { max-width: 900px; margin: 0 auto; padding: 60px 20px 30px; }
 .hero h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.08; max-width: 20ch; margin-bottom: 14px; }
 .hero .lede { margin-top: 14px; max-width: 52ch; color: var(--fg-dim); font-size: 1.02rem; }
 .hero .badges { display: flex; gap: 22px; margin-top: 24px; flex-wrap: wrap; font-size: 0.84rem; color: var(--fg-dim2); }
 .hero .badges b { color: var(--fg); display: block; font-size: 1rem; margin-bottom: 2px; }
-
 .wizard-wrap { max-width: 900px; margin: 0 auto; padding: 0 20px 40px; }
-
 .steps-indicator { display: flex; gap: 0; margin: 30px 0 22px; }
 .step-dot { flex: 1; text-align: center; position: relative; padding-bottom: 14px; font-size: 0.8rem; color: var(--fg-dim2); font-weight: 500; }
-.step-dot::before {
-  content: attr(data-n);
-  display: flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; border-radius: 50%;
-  background: var(--bg-sunken); border: 1px solid var(--line);
-  margin: 0 auto 8px; font-weight: 700; color: var(--fg-dim2);
-}
+.step-dot::before { content: attr(data-n); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--bg-sunken); border: 1px solid var(--line); margin: 0 auto 8px; font-weight: 700; color: var(--fg-dim2); }
 .step-dot.active { color: var(--fg); }
 .step-dot.active::before { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-dim); }
 .step-dot.done::before { background: var(--ok); color: #06171C; border-color: var(--ok); content: "✓"; }
-
 .panel-box { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 18px; padding: 28px; }
 .panel-box h2 { font-size: 1.3rem; margin-bottom: 6px; }
 .panel-box .hint { color: var(--fg-dim2); font-size: 0.86rem; margin-bottom: 20px; }
-
 .class-tag { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 8px 14px; border-radius: 20px; background: var(--bg-sunken); color: var(--fg-dim2); font-size: 0.85rem; font-weight: 600; }
 .class-tag.detected { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-strong); }
-
 .svc-list { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
-.svc-row {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; padding: 14px 16px;
-  border: 1px solid var(--line); border-radius: 12px;
-  background: var(--bg-sunken); cursor: pointer;
-}
+.svc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-sunken); cursor: pointer; }
 .svc-row:hover { border-color: var(--accent-strong); }
 .svc-row.checked { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-dim), transparent); box-shadow: 0 0 0 3px var(--accent-dim); }
 .svc-row .left { display: flex; align-items: center; gap: 12px; flex: 1; }
@@ -72,15 +39,12 @@ nav .wrap {
 .svc-row.checked .checkbox::after { content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--accent-fg); font-weight: 700; }
 .svc-row .svc-name { font-weight: 500; font-size: 0.94rem; }
 .svc-row .price { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.92rem; color: var(--accent); white-space: nowrap; }
-
 .day-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
 .day-chip { flex-shrink: 0; padding: 12px 18px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-sunken); font-size: 0.85rem; text-align: center; cursor: pointer; color: var(--fg-dim); min-width: 78px; }
 .day-chip .d { font-size: 0.72rem; color: var(--fg-dim2); display: block; margin-top: 4px; }
 .day-chip.active { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-dim), transparent); color: var(--fg); }
-
 .nearest { margin-top: 16px; padding: 14px 18px; border-radius: 12px; background: var(--accent-dim); border: 1px solid var(--accent-strong); font-size: 0.88rem; color: var(--fg); }
 .nearest b { color: var(--accent); cursor: pointer; text-decoration: underline; }
-
 .slot-group { margin-top: 22px; }
 .slot-group h4 { font-size: 0.82rem; color: var(--fg-dim2); margin-bottom: 10px; font-weight: 600; text-transform: uppercase; }
 .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
@@ -88,44 +52,35 @@ nav .wrap {
 .slot .cap { display: block; font-size: 0.68rem; color: var(--fg-dim2); margin-top: 3px; font-weight: 400; font-family: inherit; }
 .slot.selected { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-dim), transparent); color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
 .slot.full { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
-
 .summary { background: var(--bg-sunken); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 20px; }
 .summary-row { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 7px 0; color: var(--fg-dim); }
 .summary-row.total { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 14px; font-weight: 700; color: var(--fg); font-size: 1.1rem; }
 .summary-row.total span:last-child { font-family: 'JetBrains Mono', monospace; color: var(--accent); }
-
 .panel-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 26px; gap: 12px; flex-wrap: wrap; }
-
 .confirm-box { text-align: center; padding: 30px 0; }
 .confirm-box .check { font-size: 4rem; color: var(--ok); margin-bottom: 16px; }
 .confirm-box .id { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; color: var(--accent); margin: 16px 0; font-weight: 700; }
-
 .sticky-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: rgba(17, 28, 33, 0.96); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 12px 16px; display: none; }
 [data-theme="light"] .sticky-bar { background: rgba(255, 255, 255, 0.96); }
 .sticky-bar.show { display: block; }
 .sticky-bar .wrap { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .sticky-bar .total { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.15rem; color: var(--accent); }
-
 .lookup { max-width: 900px; margin: 40px auto 0; padding: 0 20px; }
 .lookup-toggle { font-size: 0.86rem; color: var(--fg-dim2); background: none; border: none; cursor: pointer; text-decoration: underline; font-family: inherit; }
 .lookup-panel { margin-top: 14px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: none; }
 .lookup-panel.open { display: block; }
 .lookup-result { margin-top: 14px; padding: 14px 16px; background: var(--bg-sunken); border-radius: 12px; font-size: 0.88rem; color: var(--fg-dim); }
-
 footer { border-top: 1px solid var(--line); padding: 30px 0; font-size: 0.82rem; color: var(--fg-dim2); max-width: 900px; margin: 40px auto 0; }
 footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 0 20px; }
-
 .linklike { background: none; border: none; color: var(--accent); font-size: 0.85rem; cursor: pointer; text-decoration: underline; font-family: inherit; }
 </style>
 </head><body>
-
 <nav>
   <div class="wrap">
     <div class="brand"><span class="pulse"></span><span id="brandName">RapidLink</span></div>
     <button class="btn btn-small" id="topBookBtn" type="button">Записаться</button>
   </div>
 </nav>
-
 <header class="hero">
   <h1 id="heroTitle">Загрузка…</h1>
   <p class="lede" id="heroLede">Загружаем информацию…</p>
@@ -135,14 +90,12 @@ footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; g
     <div>Мгновенное подтверждение</div>
   </div>
 </header>
-
 <div class="wizard-wrap">
   <div class="steps-indicator">
     <div class="step-dot active" data-n="1" id="dot1">Услуги</div>
     <div class="step-dot" data-n="2" id="dot2">Время</div>
     <div class="step-dot" data-n="3" id="dot3">Контакты</div>
   </div>
-
   <div class="panel-box" id="step1">
     <h2>Выберите услуги</h2>
     <p class="hint" id="step1Hint">Загрузка…</p>
@@ -154,7 +107,6 @@ footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; g
       <button class="btn" id="toStep2" disabled>Далее — выбрать время</button>
     </div>
   </div>
-
   <div class="panel-box" id="step2" style="display:none;">
     <h2>Выберите дату и время</h2>
     <p class="hint">Показываем, сколько мест осталось на каждый час</p>
@@ -166,7 +118,6 @@ footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; g
       <button class="btn" id="toStep3" disabled>Далее — контакты</button>
     </div>
   </div>
-
   <div class="panel-box" id="step3" style="display:none;">
     <h2>Контакты и подтверждение</h2>
     <p class="hint">Оплата на месте</p>
@@ -181,7 +132,6 @@ footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; g
       <button class="btn" id="confirmBtn">Подтвердить запись</button>
     </div>
   </div>
-
   <div class="panel-box" id="stepDone" style="display:none;">
     <div class="confirm-box">
       <div class="check">✓</div>
@@ -192,7 +142,6 @@ footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; g
     </div>
   </div>
 </div>
-
 <div class="lookup">
   <button class="lookup-toggle" id="lookupToggle">Моя запись — найти или отменить</button>
   <div class="lookup-panel" id="lookupPanel">
@@ -203,23 +152,19 @@ footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; g
     <div id="lookupResult"></div>
   </div>
 </div>
-
 <footer>
   <div class="wrap">
     <div id="footerName">RapidLink</div>
     <div>Круглосуточно, без выходных</div>
   </div>
 </footer>
-
 <div class="sticky-bar" id="stickyBar">
   <div class="wrap">
     <div class="total">Итого: <span id="stickyAmount">0 ₽</span></div>
     <button class="btn" id="stickyBtn">Далее</button>
   </div>
 </div>
-
-<script>
-const API = '';
+<script>const API = '';
 let CATALOG = null;
 let svcByClass = {};
 let selectedClass = null;
@@ -240,9 +185,8 @@ const BRAND = {
     { c: 6, k: ['прицеп','trailer','мзса','скиф','экспедиция','курганприцеп'] }
   ]
 };
-</script>
-</body>
-  </html>function rub(n) { return (n || 0).toLocaleString('ru-RU') + ' ₽'; }
+
+function rub(n) { return (n || 0).toLocaleString('ru-RU') + ' ₽'; }
 function pad(n) { return String(n).padStart(2, '0'); }
 function fmtDate(d) { return d.toISOString().slice(0, 10); }
 
@@ -303,9 +247,7 @@ async function boot() {
     var inp = document.getElementById('carModel') || document.getElementById('classSelect');
     if (inp) { inp.focus(); inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   });
-}
-
-function detectClassKeyword(text) {
+}function detectClassKeyword(text) {
   const t = text.toLowerCase().trim();
   if (!t) return null;
   for (const group of BRAND.keywords) {
@@ -355,7 +297,9 @@ function renderClassTag(rawVal) {
   if (!cls) { tag.className = 'class-tag'; tagText.textContent = 'Класс не распознан'; return; }
   tag.className = 'class-tag detected';
   tagText.textContent = '✓ ' + cls.name;
-}function renderSvcList() {
+}
+
+function renderSvcList() {
   const list = document.getElementById('svcList');
   if (!selectedClass) { list.innerHTML = ''; updateStep1Btn(); updateSticky(); return; }
   const svc = svcByClass[selectedClass] || [];
@@ -420,9 +364,7 @@ function goStep(n) {
   if (n === 2) renderStep2();
   if (n === 3) renderSummary();
   updateSticky();
-}
-
-function next7Days() {
+    }function next7Days() {
   const days = [];
   const today = new Date();
   for (let i = 0; i < 7; i++) { const d = new Date(today); d.setDate(today.getDate() + i); days.push(d); }
@@ -504,7 +446,9 @@ function renderSummary() {
   box.innerHTML = '<div class="summary-row"><span>Категория</span><span>' + className + '</span></div>' + rows +
     '<div class="summary-row"><span>Дата и время</span><span>' + dateLabel + ', ' + pad(selectedHour) + ':00</span></div>' +
     '<div class="summary-row total"><span>Итого</span><span>' + rub(currentTotal()) + '</span></div>';
-}async function confirmBooking() {
+}
+
+async function confirmBooking() {
   const name = document.getElementById('name').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const status = document.getElementById('status');
@@ -516,10 +460,7 @@ function renderSummary() {
     const res = await api('/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: name, phone: phone, vehicle_class_id: selectedClass,
-        service_ids: Array.from(selectedServices), date: selectedDate, hour: selectedHour
-      })
+      body: JSON.stringify({ name: name, phone: phone, vehicle_class_id: selectedClass, service_ids: Array.from(selectedServices), date: selectedDate, hour: selectedHour })
     });
     document.getElementById('bookingIdOut').textContent = '№ ' + res.booking.booking_code;
     [1, 2, 3].forEach(function(i) { document.getElementById('step' + i).style.display = 'none'; });
@@ -534,12 +475,8 @@ function renderSummary() {
     } else {
       status.className = 'msg err'; status.textContent = 'Не удалось отправить запись.';
     }
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-function resetWizard() {
+  } finally { btn.disabled = false; }
+}function resetWizard() {
   selectedClass = null; selectedServices = new Set(); selectedHour = null;
   document.querySelectorAll('.step-dot').forEach(function(d) { d.classList.remove('done', 'active'); });
   const inp = document.getElementById('carModel'); if (inp) inp.value = '';
@@ -587,8 +524,10 @@ async function doLookup() {
       } catch (e) { btn.disabled = false; btn.textContent = 'Не удалось, повторить'; }
     });
   });
-}boot();
+}
+
+boot();
 </script>
 <script src="/theme.js"></script>
 </body>
-  </html>
+</html>
