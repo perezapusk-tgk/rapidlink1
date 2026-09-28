@@ -1,5 +1,5 @@
 {
-  "name": "rapidlink1",
+  "name": "rapidlink",
   "version": "1.0.0",
   "description": "RapidLink — платформа записи для веб-студий",
   "main": "server.js",
