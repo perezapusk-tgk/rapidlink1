@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Админка — RapidLink</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+.washer-card {
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.washer-card .info { flex: 1; min-width: 220px; }
+.washer-card .name { font-weight: 700; font-size: 1rem; color: var(--fg); }
+.washer-card .sub { font-size: 0.82rem; color: var(--fg-dim2); margin-top: 4px; }
+.washer-card .comm { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--ok); font-weight: 700; }
+.editable { background: var(--bg-sunken); border-radius: 6px; padding: 6px 8px; outline: none; border: 1px solid transparent; }
+.editable:focus { border-color: var(--accent); background: var(--bg-elev); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1>Rapid<span style="color:var(--accent);">Link</span> · Админка</h1>
+      <div class="sub" id="businessName">—</div>
+    </div>
+    <button class="btn btn-ghost btn-small" id="logoutBtn" style="display:none;">Выйти</button>
+  </div>
+
+  <div class="card" id="loginCard">
+    <h3 style="margin-top:0;">Вход</h3>
+    <div class="row">
+      <input id="user" class="input" placeholder="логин">
+      <input id="pass" type="password" class="input" placeholder="пароль">
+      <button class="btn" id="loginBtn">Войти</button>
+    </div>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+
+  <div id="main" style="display:none;">
+    <div class="tabs">
+      <button class="tab active" data-tab="bookings">Записи</button>
+      <button class="tab" data-tab="report">Отчёт</button>
+      <button class="tab" data-tab="washers">Мойщики</button>
+      <button class="tab" data-tab="services">Услуги</button>
+    </div>
+
+    <div id="panel-bookings">
+      <div class="stats">
+        <div class="stat"><div class="stat-icon">📋</div><div class="lbl">Записей</div><div class="val accent" id="statBookings">0</div></div>
+        <div class="stat"><div class="stat-icon">💰</div><div class="lbl">Выручка</div><div class="val" id="statDayRevenue">0 ₽</div></div>
+        <div class="stat stat-ok"><div class="stat-icon">✅</div><div class="lbl">Готово</div><div class="val ok" id="statDone">0</div></div>
+        <div class="stat"><div class="stat-icon">📊</div><div class="lbl">Средний чек</div><div class="val" id="statAvg">0 ₽</div></div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <label>Дата <input id="date" type="date" class="input"></label>
+          <button class="btn" id="loadBtn">Загрузить</button>
+          <button class="btn btn-ghost" id="exportBtn">Экспорт CSV</button>
+        </div>
+        <div class="msg" id="bookingsMsg"></div>
+      </div>
+
+      <div id="bookingsList"></div>
+    </div>
+
+    <div id="panel-report" style="display:none;">
+      <div class="card">
+        <div class="row">
+          <label>Дата <input id="reportDate" type="date" class="input"></label>
+          <button class="btn" id="loadReportBtn">Показать</button>
+        </div>
+      </div>
+      <div class="card card-pad-0">
+        <div class="table-wrap">
+          <table class="table" id="reportTb">
+            <thead><tr><th>Мойщик</th><th>Записей</th><th>Выручка</th><th>Штрафы</th><th>К выплате</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-washers" style="display:none;">
+      <div class="flex-between mb-2" style="flex-wrap:wrap;gap:10px;">
+        <h3 style="margin:0;">Мойщики</h3>
+        <button class="btn" id="addWasherBtn">+ Добавить</button>
+      </div>
+      <div id="washersList"></div>
+      <div class="msg" id="washersMsg"></div>
+
+      <div class="card" id="addWasherCard" style="display:none;">
+        <h3 style="margin-top:0;">Новый мойщик</h3>
+        <div class="row">
+          <input id="newWasherName" class="input" placeholder="Имя">
+          <input id="newWasherPhone" class="input" placeholder="Телефон">
+          <input id="newWasherComm" class="input" type="number" placeholder="Комиссия %" value="50" style="width:130px;">
+        </div>
+        <div class="row row-narrow mt-2">
+          <button class="btn btn-ghost" id="cancelWasherBtn">Отмена</button>
+          <button class="btn" id="saveWasherBtn">Сохранить</button>
+        </div>
+        <div class="msg" id="newWasherMsg"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Начислить штраф</h3>
+        <div class="row">
+          <select id="fineWasher" class="input"></select>
+          <input id="fineAmount" type="number" class="input" placeholder="Сумма, ₽" style="width:130px;">
+          <input id="fineReason" class="input" placeholder="Причина">
+        </div>
+        <button class="btn mt-2" id="fineBtn">Добавить штраф</button>
+        <div class="msg" id="fineMsg"></div>
+      </div>
+    </div>
+
+    <div id="panel-services" style="display:none;">
+      <p class="text-dim2" style="font-size:0.85rem;">Кликните на название, цену или длительность — отредактируйте, потом нажмите «Сохранить».</p>
+      <div class="card card-pad-0">
+        <div class="table-wrap">
+          <table class="table" id="servicesTb">
+            <thead><tr><th>ID</th><th>Класс</th><th>Название</th><th>Цена</th><th>Мин</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="msg" id="servicesMsg"></div>
+    </div>
+  </div>
+        </div><script>
+const API = '';
+let token = '';
+
+async function api(path, opts) {
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(function() { return null; });
+  if (!res.ok) { const err = new Error((data && data.error) || 'fail'); err.status = res.status; err.data = data; throw err; }
+  return data;
+}
+function rub(n) { return (n || 0).toLocaleString('ru-RU') + ' ₽'; }
+function todayIso() { return new Date().toISOString().slice(0, 10); }
+
+document.getElementById('loginBtn').addEventListener('click', async function() {
+  const u = document.getElementById('user').value;
+  const p = document.getElementById('pass').value;
+  const msg = document.getElementById('loginMsg');
+  msg.className = 'msg'; msg.textContent = 'Входим…';
+  try {
+    const res = await api('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    token = res.token;
+    localStorage.setItem('admin_token', token);
+    document.getElementById('loginCard').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+    document.getElementById('logoutBtn').style.display = '';
+    document.getElementById('date').value = todayIso();
+    document.getElementById('reportDate').value = todayIso();
+    loadWashers();
+    loadBookings();
+    loadReport();
+    msg.textContent = '';
+  } catch (e) {
+    msg.className = 'msg err';
+    msg.textContent = 'Неверный логин или пароль.';
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', function() {
+  token = '';
+  localStorage.removeItem('admin_token');
+  document.getElementById('main').style.display = 'none';
+  document.getElementById('loginCard').style.display = '';
+  document.getElementById('logoutBtn').style.display = 'none';
+});
+
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    ['bookings', 'report', 'washers', 'services'].forEach(function(name) {
+      const el = document.getElementById('panel-' + name);
+      if (el) el.style.display = (name === tab.dataset.tab) ? '' : 'none';
+    });
+    if (tab.dataset.tab === 'services') loadServices();
+    if (tab.dataset.tab === 'washers') loadWashers();
+  });
+});
+
+async function loadBookings() {
+  const d = document.getElementById('date').value;
+  const msg = document.getElementById('bookingsMsg');
+  const list = document.getElementById('bookingsList');
+  msg.textContent = '';
+  list.innerHTML = '<div class="empty"><div class="empty-title">Загружаем…</div></div>';
+  let res;
+  try {
+    res = await api('/api/admin/bookings?date=' + d);
+  } catch (e) {
+    msg.className = 'msg err';
+    msg.textContent = 'Не удалось загрузить записи.';
+    list.innerHTML = '';
+    return;
+  }
+  const bookings = res.bookings || [];
+  let revenue = 0, done = 0, confirmed = 0;
+  bookings.forEach(function(b) {
+    if (b.status === 'completed') done++;
+    if (b.status === 'confirmed' || b.status === 'completed') { revenue += b.total; confirmed++; }
+  });
+  document.getElementById('statBookings').textContent = bookings.length;
+  document.getElementById('statDayRevenue').textContent = rub(revenue);
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statAvg').textContent = confirmed > 0 ? rub(Math.round(revenue / confirmed)) : '0 ₽';
+  if (bookings.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">На эту дату записей нет</div></div>';
+    return;
+  }
+  let html = '<div class="card card-pad-0"><div class="table-wrap">';
+  html += '<table class="table"><thead><tr>';
+  html += '<th>Код</th><th>Клиент</th><th>Телефон</th><th>Класс</th><th>Услуги</th><th>Время</th><th>Сумма</th><th>Статус</th><th>Мойщик</th><th></th>';
+  html += '</tr></thead><tbody>';
+  bookings.forEach(function(b) {
+    let services = b.services_json;
+    try { services = JSON.parse(b.services_json).join(', '); } catch (e) {}
+    const statusClass = b.status === 'confirmed' ? 'badge-accent' : (b.status === 'completed' ? 'badge-ok' : 'badge-danger');
+    html += '<tr>' +
+      '<td><span class="mono" style="color:var(--accent);font-weight:700;">' + b.booking_code + '</span></td>' +
+      '<td><b>' + b.name + '</b></td>' +
+      '<td class="mono" style="font-size:0.82rem;">' + b.phone + '</td>' +
+      '<td class="text-dim2">' + (b.class_name || '') + '</td>' +
+      '<td class="text-dim2" style="max-width:220px;font-size:0.82rem;">' + services + '</td>' +
+      '<td class="mono">' + String(b.hour).padStart(2, '0') + ':00</td>' +
+      '<td class="num"><b>' + rub(b.total) + '</b></td>' +
+      '<td><span class="badge ' + statusClass + '">' + b.status + '</span></td>' +
+      '<td><select class="input" style="min-width:150px;padding:6px 8px;font-size:0.82rem;" data-washer="' + b.id + '">' +
+        '<option value="">—</option>' +
+        (window.__washers || []).map(function(w) {
+          return '<option value="' + w.id + '"' + (w.id === b.assigned_washer_id ? ' selected' : '') + '>' + w.name + '</option>';
+        }).join('') +
+      '</select></td>' +
+      '<td style="white-space:nowrap;">' +
+        (b.status === 'confirmed' ? '<button class="btn btn-small btn-ok" data-done="' + b.id + '">✓ Готова</button>' : '') +
+      '</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+  list.innerHTML = html;
+  list.querySelectorAll('select[data-washer]').forEach(function(sel) {
+    sel.addEventListener('change', async function() {
+      try {
+        await api('/api/admin/bookings/' + sel.dataset.washer, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assigned_washer_id: sel.value ? parseInt(sel.value, 10) : null })
+        });
+      } catch (e) { alert('Ошибка: ' + e.message); }
+    });
+  });
+  list.querySelectorAll('button[data-done]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (!confirm('Отметить как готовую?')) return;
+      btn.disabled = true;
+      try {
+        await api('/api/admin/bookings/' + btn.dataset.done + '/complete', { method: 'POST' });
+        loadBookings();
+      } catch (e) { alert('Ошибка: ' + e.message); btn.disabled = false; }
+    });
+  });
+}
+
+document.getElementById('loadBtn').addEventListener('click', loadBookings);
+document.getElementById('exportBtn').addEventListener('click', function() {
+  const d = document.getElementById('date').value;
+  fetch(API + '/api/admin/export/bookings?date=' + d, { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bookings_' + d + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+});async function loadReport() {
+  const d = document.getElementById('reportDate').value;
+  let res;
+  try { res = await api('/api/admin/reports/daily?date=' + d); } catch (e) { return; }
+  const tbody = document.querySelector('#reportTb tbody');
+  tbody.innerHTML = '';
+  (res.rows || []).forEach(function(r) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + r.washer_name + '</td><td class="num">' + r.bookings_count + '</td><td class="num">' + rub(r.total_sum) + '</td><td class="num">' + rub(r.fines_sum) + '</td><td class="num"><b>' + rub(r.payout) + '</b></td>';
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('loadReportBtn').addEventListener('click', loadReport);
+
+async function loadWashers() {
+  const list = document.getElementById('washersList');
+  const msg = document.getElementById('washersMsg');
+  list.innerHTML = '<div class="empty"><div class="empty-title">Загружаем…</div></div>';
+  msg.textContent = '';
+  let res;
+  try {
+    res = await api('/api/admin/washers');
+  } catch (e) {
+    list.innerHTML = '<div class="empty"><div class="empty-title">Не удалось загрузить</div></div>';
+    return;
+  }
+  window.__washers = res.washers || [];
+  const fineSelect = document.getElementById('fineWasher');
+  fineSelect.innerHTML = '';
+  window.__washers.forEach(function(w) {
+    const opt = document.createElement('option');
+    opt.value = w.id;
+    opt.textContent = w.name;
+    fineSelect.appendChild(opt);
+  });
+  if (window.__washers.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">👤</div><div class="empty-title">Пока нет мойщиков</div><div>Нажмите «+ Добавить», чтобы добавить первого сотрудника.</div></div>';
+    return;
+  }
+  list.innerHTML = '';
+  window.__washers.forEach(function(w) {
+    const div = document.createElement('div');
+    div.className = 'washer-card';
+    div.innerHTML =
+      '<div class="info">' +
+        '<div class="name">' + w.name + '</div>' +
+        '<div class="sub">' + (w.phone || 'телефон не указан') + '</div>' +
+      '</div>' +
+      '<div class="comm">' + Math.round(w.commission * 100) + '%</div>' +
+      '<div class="actions">' +
+        '<button class="btn btn-small btn-danger" data-del-washer="' + w.id + '">Удалить</button>' +
+      '</div>';
+    list.appendChild(div);
+  });
+  list.querySelectorAll('button[data-del-washer]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      const w = window.__washers.find(function(x) { return String(x.id) === btn.dataset.delWasher; });
+      if (!confirm('Удалить мойщика «' + (w ? w.name : '') + '»?')) return;
+      btn.disabled = true;
+      try {
+        await api('/api/admin/washers/' + btn.dataset.delWasher, { method: 'DELETE' });
+        loadWashers();
+      } catch (e) {
+        if (e.data && e.data.error === 'washer_has_bookings') alert('Нельзя удалить — назначено ' + e.data.count + ' записей');
+        else alert('Ошибка: ' + e.message);
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+document.getElementById('addWasherBtn').addEventListener('click', function() {
+  document.getElementById('addWasherCard').style.display = '';
+  document.getElementById('newWasherName').value = '';
+  document.getElementById('newWasherPhone').value = '';
+  document.getElementById('newWasherComm').value = '50';
+});
+
+document.getElementById('cancelWasherBtn').addEventListener('click', function() {
+  document.getElementById('addWasherCard').style.display = 'none';
+});
+
+document.getElementById('saveWasherBtn').addEventListener('click', async function() {
+  const name = document.getElementById('newWasherName').value.trim();
+  const phone = document.getElementById('newWasherPhone').value.trim();
+  const comm = parseFloat(document.getElementById('newWasherComm').value) / 100;
+  const msg = document.getElementById('newWasherMsg');
+  if (!name) { msg.className = 'msg err'; msg.textContent = 'Введите имя'; return; }
+  try {
+    await api('/api/admin/washers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, phone: phone, commission: comm })
+    });
+    msg.className = 'msg ok'; msg.textContent = '✓ Мойщик добавлен';
+    document.getElementById('addWasherCard').style.display = 'none';
+    loadWashers();
+  } catch (e) { msg.className = 'msg err'; msg.textContent = 'Ошибка: ' + e.message; }
+});
+
+document.getElementById('fineBtn').addEventListener('click', async function() {
+  const washer_id = parseInt(document.getElementById('fineWasher').value, 10);
+  const amount = parseInt(document.getElementById('fineAmount').value, 10);
+  const reason = document.getElementById('fineReason').value;
+  const msg = document.getElementById('fineMsg');
+  if (!washer_id || !amount) { msg.className = 'msg err'; msg.textContent = 'Укажите мойщика и сумму'; return; }
+  try {
+    await api('/api/admin/fines', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ washer_id: washer_id, amount: amount, reason: reason })
+    });
+    msg.className = 'msg ok'; msg.textContent = '✓ Штраф добавлен';
+    document.getElementById('fineAmount').value = '';
+    document.getElementById('fineReason').value = '';
+  } catch (e) { msg.className = 'msg err'; msg.textContent = 'Ошибка: ' + e.message; }
+});async function loadServices() {
+  const tbody = document.querySelector('#servicesTb tbody');
+  const msg = document.getElementById('servicesMsg');
+  tbody.innerHTML = '<tr><td colspan="6" class="text-dim2">Загружаем…</td></tr>';
+  msg.textContent = '';
+  let res;
+  try {
+    res = await api('/api/admin/services');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-danger">Не удалось загрузить</td></tr>';
+    return;
+  }
+  tbody.innerHTML = '';
+  (res.services || []).forEach(function(s) {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + s.id + '</td>' +
+      '<td class="text-dim2">' + (s.class_name || '') + '</td>' +
+      '<td contenteditable="true" class="editable" data-field="name" data-id="' + s.id + '">' + s.name + '</td>' +
+      '<td contenteditable="true" class="editable" data-field="price" data-id="' + s.id + '">' + s.price + '</td>' +
+      '<td contenteditable="true" class="editable" data-field="duration" data-id="' + s.id + '">' + s.duration + '</td>' +
+      '<td><button class="btn btn-small" data-save-id="' + s.id + '">Сохранить</button></td>';
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('button[data-save-id]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      const id = btn.dataset.saveId;
+      const nameCell = tbody.querySelector('[data-field="name"][data-id="' + id + '"]');
+      const priceCell = tbody.querySelector('[data-field="price"][data-id="' + id + '"]');
+      const durCell = tbody.querySelector('[data-field="duration"][data-id="' + id + '"]');
+      btn.disabled = true;
+      try {
+        await api('/api/admin/services/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: nameCell.textContent.trim(),
+            price: parseInt(priceCell.textContent.trim(), 10),
+            duration: parseInt(durCell.textContent.trim(), 10)
+          })
+        });
+        msg.className = 'msg ok'; msg.textContent = '✓ Услуга #' + id + ' сохранена';
+        btn.textContent = '✓';
+        setTimeout(function() { btn.textContent = 'Сохранить'; btn.disabled = false; }, 1200);
+      } catch (e) {
+        msg.className = 'msg err'; msg.textContent = 'Ошибка: ' + e.message;
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+(function() {
+  const saved = localStorage.getItem('admin_token');
+  if (saved) {
+    token = saved;
+    api('/api/admin/bookings?date=' + todayIso()).then(function() {
+      document.getElementById('loginCard').style.display = 'none';
+      document.getElementById('main').style.display = 'block';
+      document.getElementById('logoutBtn').style.display = '';
+      document.getElementById('date').value = todayIso();
+      document.getElementById('reportDate').value = todayIso();
+      loadWashers();
+      loadBookings();
+      loadReport();
+    }).catch(function() {
+      token = '';
+      localStorage.removeItem('admin_token');
+    });
+  }
+})();
+</script>
+<script src="/theme.js"></script>
+</body>
+</html>
