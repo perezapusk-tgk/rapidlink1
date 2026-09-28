@@ -107,14 +107,14 @@ function resolveTenantId(req) {
   if (!s || s === 'demo-2-pkbp' || s === 'localhost' || s === 'www') return 1;
   const row = db.prepare('SELECT id FROM tenants WHERE subdomain = ?').get(s);
   return row ? row.id : 1;
-      }/* ============ ПУБЛИЧНЫЕ ============ */
+}/* ============ ПУБЛИЧНЫЕ ============ */
 
 app.get('/api/vertical', function(req, res) {
   const tid = resolveTenantId(req);
   const services = db.prepare('SELECT id,name,price,duration,vehicle_class FROM services WHERE tenant_id = ? ORDER BY vehicle_class, id').all(tid);
   const classes = db.prepare('SELECT id,name FROM classes WHERE tenant_id = ? ORDER BY id').all(tid);
   const tenant = db.prepare('SELECT * FROM tenants WHERE id = ?').get(tid);
-  res.json({ services, classes, capacity: 2, businessName: tenant ? tenant.business_name : '', city: '', tenant_id: tid, vertical_code: tenant ? tenant.vertical_code : 'wash' });
+  res.json({ services: services, classes: classes, capacity: 2, businessName: tenant ? tenant.business_name : '', city: '', tenant_id: tid, vertical_code: tenant ? tenant.vertical_code : 'wash' });
 });
 
 app.get('/api/slots', function(req, res) {
@@ -125,7 +125,7 @@ app.get('/api/slots', function(req, res) {
   db.prepare('SELECT hour, COUNT(*) as cnt FROM bookings WHERE date = ? AND status = ? AND tenant_id = ? GROUP BY hour').all(date, 'confirmed', tid).forEach(function(r) { counts[r.hour] = r.cnt; });
   const slots = [];
   for (let h = 0; h < 24; h++) { const used = counts[h] || 0; slots.push({ hour: h, remaining: Math.max(0, 2 - used) }); }
-  res.json({ date, capacity: 2, slots });
+  res.json({ date: date, capacity: 2, slots: slots });
 });
 
 app.post('/api/bookings', bookingLimiter, function(req, res) {
@@ -179,8 +179,7 @@ app.delete('/api/bookings/:code', function(req, res) {
   db.prepare('UPDATE bookings SET status = ?, updated_at = ? WHERE id = ?').run('cancelled', new Date().toISOString(), rec.id);
   sendTelegram('❌ <b>Отмена</b> № ' + rec.booking_code + ' · ' + rec.name);
   res.json({ ok: true });
-});
-/* ============ АДМИН ТЕНАНТА ============ */
+});/* ============ АДМИН ТЕНАНТА ============ */
 
 app.post('/api/admin/login', loginLimiter, function(req, res) {
   const body = req.body || {};
@@ -295,8 +294,7 @@ app.get('/api/admin/export/bookings', authMiddleware, function(req, res) {
   res.setHeader('Content-disposition', 'attachment; filename=bookings_' + date + '.csv');
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.send('\uFEFF' + csv);
-});
-/* ============ КАБИНЕТ МОЙЩИКА ============ */
+});/* ============ КАБИНЕТ МОЙЩИКА ============ */
 
 app.post('/api/washer/login', loginLimiter, function(req, res) {
   const body = req.body || {};
@@ -594,4 +592,4 @@ app.patch('/api/platform/licenses/:id', platformOwnerAuth, function(req, res) {
 /* ============ ЗАПУСК ============ */
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, function() { console.log('Server listening on', PORT); });
+app.listen(PORT, () => console.log('Server listening on', PORT));
