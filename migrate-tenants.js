@@ -9,10 +9,16 @@ if (!fs.existsSync(dbFile)) {
 }
 
 const db = new Database(dbFile);
-const cols = db.prepare('PRAGMA table_info(bookings)').all();
-const alreadyMigrated = cols.some(function(c) { return c.name === 'tenant_id'; });
+// Проверяем, существует ли таблица tenants
+const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='tenants'").all();
+const tenantsExists = tables.length > 0;
 
-if (alreadyMigrated) {
+// Проверяем, есть ли tenant_id в bookings
+const cols = db.prepare('PRAGMA table_info(bookings)').all();
+const tenantIdExists = cols.some(function(c) { return c.name === 'tenant_id'; });
+
+// Если tenants есть И tenant_id везде — пропускаем
+if (tenantsExists && tenantIdExists) {
   console.log('• Миграция tenant_id уже применена');
   db.close();
   process.exit(0);
