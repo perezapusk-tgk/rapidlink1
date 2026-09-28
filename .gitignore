@@ -1,0 +1,7 @@
+node_modules/
+app.db
+platform.db
+tenant_*.db
+config.json
+.env
+.DS_Store
