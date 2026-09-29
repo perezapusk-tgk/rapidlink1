@@ -1,0 +1,20 @@
+# Потоковая копия баз в Backblaze B2. Значения берутся из переменных окружения Render.
+dbs:
+  - path: ${APP_DIR}/app.db
+    replicas:
+      - type: s3
+        bucket: ${LITESTREAM_BUCKET}
+        path: rapidlink/app
+        endpoint: ${LITESTREAM_ENDPOINT}
+        region: ${LITESTREAM_REGION}
+        force-path-style: true
+        sync-interval: 10s
+  - path: ${APP_DIR}/platform.db
+    replicas:
+      - type: s3
+        bucket: ${LITESTREAM_BUCKET}
+        path: rapidlink/platform
+        endpoint: ${LITESTREAM_ENDPOINT}
+        region: ${LITESTREAM_REGION}
+        force-path-style: true
+        sync-interval: 10s
