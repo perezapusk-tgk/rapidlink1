@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Кабинет сотрудника</title>
+<style>
+:root{--bg:#f3f5f4;--card:#fff;--ink:#14201b;--mute:#63706a;--line:#dde3e0;--main:#0f766e;--warn:#b45309;--done:#3f6b3a}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1512;--card:#17211d;--ink:#e8efeb;--mute:#93a39b;--line:#26332d;--main:#2dd4bf;--warn:#f59e0b;--done:#86c27f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:520px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:8px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
+label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
+input{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:12px 16px;background:var(--main);color:#fff;cursor:pointer;min-height:44px}
+button.ghost{background:transparent;color:var(--main);border:1px solid var(--main)}
+button:disabled{opacity:.5}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--main);outline-offset:2px}
+.full{width:100%;margin-top:14px}
+.err{color:var(--warn);min-height:1.4em;margin-top:8px;font-size:14px}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.time{font-size:22px;font-weight:700}
+.tag{font-size:13px;color:var(--mute)}
+.st-in_progress .tag{color:var(--warn)}.st-completed .tag{color:var(--done)}
+.st-completed,.st-cancelled{opacity:.6}
+.actions{display:flex;gap:8px;margin-top:10px}.actions button{flex:1}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.sum b{display:block;font-size:18px}.sum span{font-size:12px;color:var(--mute)}
+.empty{color:var(--mute);text-align:center;padding:32px 0}
+a{color:var(--main)}
+</style>
+</head>
+<body>
+<main>
+  <section id="login" hidden>
+    <h1>Вход для сотрудника</h1>
+    <div class="card">
+      <label for="phone">Телефон</label>
+      <input id="phone" type="tel" inputmode="tel" placeholder="+79001112233" autocomplete="username">
+      <label for="pin">PIN (выдаёт администратор)</label>
+      <input id="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password">
+      <button id="loginBtn" class="full">Войти</button>
+      <div id="loginErr" class="err" role="alert"></div>
+    </div>
+  </section>
+  <section id="work" hidden>
+    <div class="top"><h1 id="hello">Записи</h1><button id="logout" class="ghost">Выйти</button></div>
+    <label for="date">Дата</label>
+    <input id="date" type="date">
+    <div id="summary" class="card sum" style="margin-top:12px" hidden></div>
+    <div id="list"></div>
+  </section>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var token = null, name = '';
+  try { token = localStorage.getItem('washerToken'); name = localStorage.getItem('washerName') || ''; } catch (e) {}
+  var LABEL = { confirmed: 'Ожидает', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменена' };
+  var rub = function (n) { return Number(n || 0).toLocaleString('ru-RU') + ' ₽'; };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var today = function () { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+
+  function api(path, opts) {
+    opts = opts || {}; opts.headers = { 'Content-Type': 'application/json' };
+    if (token) opts.headers.Authorization = 'Bearer ' + token;
+    return fetch(path, opts).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (r.status === 401 && token) { logout(); throw new Error('Сессия закончилась. Войдите снова.'); }
+        if (!r.ok) throw new Error(j.error === 'invalid_credentials' ? 'Неверный телефон или PIN' :
+          j.error === 'too_many_requests' ? 'Слишком много попыток. Подождите 10 минут.' : (j.error || 'Ошибка сервера'));
+        return j;
+      });
+    });
+  }
+  function show(inn) { $('login').hidden = inn; $('work').hidden = !inn; if (inn) $('hello').textContent = name ? name : 'Записи'; }
+  function logout() { token = null; try { localStorage.removeItem('washerToken'); localStorage.removeItem('washerName'); } catch (e) {} show(false); }
+
+  function load() {
+    api('/api/washer/bookings?date=' + $('date').value).then(function (r) {
+      var s = r.summary || {};
+      $('summary').hidden = false;
+      $('summary').innerHTML = '<div><b>' + rub(s.total_sum) + '</b><span>выручка</span></div><div><b>' + rub(s.fines_sum) +
+        '</b><span>штрафы</span></div><div><b>' + rub(s.payout) + '</b><span>к выплате</span></div>';
+      var rows = r.bookings || [];
+      $('list').innerHTML = rows.length ? rows.map(function (b) {
+        var act = '';
+        if (b.status === 'confirmed') act = '<button data-id="' + b.id + '" data-st="in_progress" class="ghost">Начал</button><button data-id="' + b.id + '" data-st="completed">Готово</button>';
+        else if (b.status === 'in_progress') act = '<button data-id="' + b.id + '" data-st="completed">Готово</button>';
+        return '<div class="card st-' + esc(b.status) + '"><div class="row"><span class="time">' + String(b.hour).padStart(2, '0') + ':00</span><span class="tag">' + esc(LABEL[b.status] || b.status) +
+          '</span></div><div>' + esc(b.class_name) + ' · ' + rub(b.total) + '</div><div class="tag">' + esc(b.name) + ' · <a href="tel:' + esc(b.phone) + '">' + esc(b.phone) + '</a> · № ' + esc(b.booking_code) + '</div>' +
+          (act ? '<div class="actions">' + act + '</div>' : '') + '</div>';
+      }).join('') : '<div class="empty">На эту дату записей нет</div>';
+    }).catch(function (e) { $('list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+  $('list').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-id]'); if (!b) return; b.disabled = true;
+    api('/api/washer/bookings/' + b.dataset.id + '/status', { method: 'POST', body: JSON.stringify({ status: b.dataset.st }) })
+      .then(load).catch(function (er) { alert(er.message); b.disabled = false; });
+  });
+  $('loginBtn').addEventListener('click', function () {
+    $('loginErr').textContent = '';
+    api('/api/washer/login', { method: 'POST', body: JSON.stringify({ phone: $('phone').value.trim(), pin: $('pin').value }) })
+      .then(function (r) { token = r.token; name = (r.washer && r.washer.name) || '';
+        try { localStorage.setItem('washerToken', token); localStorage.setItem('washerName', name); } catch (e) {}
+        show(true); load(); })
+      .catch(function (e) { $('loginErr').textContent = e.message; });
+  });
+  $('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('loginBtn').click(); });
+  $('logout').addEventListener('click', logout);
+  $('date').addEventListener('change', load);
+  $('date').value = today();
+  if (token) { show(true); load(); } else show(false);
+})();
+</script>
+</body>
+</html>
