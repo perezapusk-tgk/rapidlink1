@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Запись онлайн — RapidLink</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+body{padding-bottom:90px}
+nav{position:sticky;top:0;z-index:30;background:rgba(10,18,22,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+[data-theme="light"] nav{background:rgba(247,249,250,.85)}
+nav .wrap{max-width:900px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:9px;font-size:1.05rem;font-weight:700}
+.pulse{width:9px;height:9px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+.hero{max-width:900px;margin:0 auto;padding:60px 20px 30px}
+.hero h1{font-size:clamp(2rem,5vw,3rem);line-height:1.08;max-width:20ch;margin-bottom:14px}
+.hero .lede{margin-top:14px;max-width:52ch;color:var(--fg-dim);font-size:1.02rem}
+.hero .badges{display:flex;gap:22px;margin-top:24px;flex-wrap:wrap;font-size:.84rem;color:var(--fg-dim2)}
+.hero .badges b{color:var(--fg);display:block;font-size:1rem;margin-bottom:2px}
+.wizard-wrap{max-width:900px;margin:0 auto;padding:0 20px 40px}
+.steps-indicator{display:flex;gap:0;margin:30px 0 22px}
+.step-dot{flex:1;text-align:center;position:relative;padding-bottom:14px;font-size:.8rem;color:var(--fg-dim2);font-weight:500}
+.step-dot::before{content:attr(data-n);display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--bg-sunken);border:1px solid var(--line);margin:0 auto 8px;font-weight:700;color:var(--fg-dim2)}
+.step-dot.active{color:var(--fg)}
+.step-dot.active::before{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-dim)}
+.step-dot.done::before{background:var(--ok);color:#06171C;border-color:var(--ok);content:"✓"}
+.panel-box{background:var(--bg-elev);border:1px solid var(--line);border-radius:18px;padding:28px}
+.panel-box h2{font-size:1.3rem;margin-bottom:6px}
+.panel-box .hint{color:var(--fg-dim2);font-size:.86rem;margin-bottom:20px}
+.class-tag{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 14px;border-radius:20px;background:var(--bg-sunken);color:var(--fg-dim2);font-size:.85rem;font-weight:600}
+.class-tag.detected{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-strong)}
+.svc-list{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.svc-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg-sunken);cursor:pointer}
+.svc-row:hover{border-color:var(--accent-strong)}
+.svc-row.checked{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent);box-shadow:0 0 0 3px var(--accent-dim)}
+.svc-row .left{display:flex;align-items:center;gap:12px;flex:1}
+.checkbox{width:20px;height:20px;border-radius:6px;border:1px solid var(--line-strong);flex-shrink:0;position:relative}
+.svc-row.checked .checkbox{background:var(--accent);border-color:var(--accent)}
+.svc-row.checked .checkbox::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--accent-fg);font-weight:700}
+.svc-row .svc-name{font-weight:500;font-size:.94rem}
+.svc-row .price{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.92rem;color:var(--accent);white-space:nowrap}
+.day-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px}
+.day-chip{flex-shrink:0;padding:12px 18px;border-radius:12px;border:1px solid var(--line);background:var(--bg-sunken);font-size:.85rem;text-align:center;cursor:pointer;color:var(--fg-dim);min-width:78px}
+.day-chip .d{font-size:.72rem;color:var(--fg-dim2);display:block;margin-top:4px}
+.day-chip.active{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent);color:var(--fg)}
+.nearest{margin-top:16px;padding:14px 18px;border-radius:12px;background:var(--accent-dim);border:1px solid var(--accent-strong);font-size:.88rem;color:var(--fg)}
+.nearest b{color:var(--accent);cursor:pointer;text-decoration:underline}
+.slot-group{margin-top:22px}
+.slot-group h4{font-size:.82rem;color:var(--fg-dim2);margin-bottom:10px;font-weight:600;text-transform:uppercase}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.slot{padding:12px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bg-sunken);font-size:.86rem;text-align:center;cursor:pointer;color:var(--fg-dim);font-family:'JetBrains Mono',monospace;font-weight:600}
+.slot .cap{display:block;font-size:.68rem;color:var(--fg-dim2);margin-top:3px;font-weight:400;font-family:inherit}
+.slot.selected{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent);color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.slot.full{opacity:.3;cursor:not-allowed;text-decoration:line-through}
+.summary{background:var(--bg-sunken);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+.summary-row{display:flex;justify-content:space-between;font-size:.9rem;padding:7px 0;color:var(--fg-dim)}
+.summary-row.total{border-top:1px solid var(--line);margin-top:10px;padding-top:14px;font-weight:700;color:var(--fg);font-size:1.1rem}
+.summary-row.total span:last-child{font-family:'JetBrains Mono',monospace;color:var(--accent)}
+.panel-actions{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:12px;flex-wrap:wrap}
+.confirm-box{text-align:center;padding:30px 0}
+.confirm-box .check{font-size:4rem;color:var(--ok);margin-bottom:16px}
+.confirm-box .id{font-family:'JetBrains Mono',monospace;font-size:1.8rem;color:var(--accent);margin:16px 0;font-weight:700}
+.sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(17,28,33,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:12px 16px;display:none}
+[data-theme="light"] .sticky-bar{background:rgba(255,255,255,.96)}
+.sticky-bar.show{display:block}
+.sticky-bar .wrap{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sticky-bar .total{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.15rem;color:var(--accent)}
+.lookup{max-width:900px;margin:40px auto 0;padding:0 20px}
+.lookup-toggle{font-size:.86rem;color:var(--fg-dim2);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit}
+.lookup-panel{margin-top:14px;background:var(--bg-elev);border:1px solid var(--line);border-radius:14px;padding:22px;display:none}
+.lookup-panel.open{display:block}
+.lookup-result{margin-top:14px;padding:14px 16px;background:var(--bg-sunken);border-radius:12px;font-size:.88rem;color:var(--fg-dim)}
+footer{border-top:1px solid var(--line);padding:30px 0;font-size:.82rem;color:var(--fg-dim2);max-width:900px;margin:40px auto 0}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:0 20px}
+.linklike{background:none;border:none;color:var(--accent);font-size:.85rem;cursor:pointer;text-decoration:underline;font-family:inherit}
+
+.car-help{font-size:.8rem;color:var(--fg-dim2);margin-top:6px}
+.class-pick{margin-top:14px}
+.class-pick.need select{border-color:var(--warn);box-shadow:0 0 0 3px var(--warn-dim)}
+.retry{margin-top:14px}
+.b-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.b-row:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="pulse"></span><span id="brandName">RapidLink</span></div>
+    <button class="btn btn-small" id="topBookBtn" type="button">Записаться</button>
+  </div>
+</nav>
+<header class="hero">
+  <h1 id="heroTitle">Загрузка…</h1>
+  <p class="lede" id="heroLede">Загружаем информацию…</p>
+  <div class="badges">
+    <div><b id="capacityNum">2</b>записи в час</div>
+    <div id="cityBadge"></div>
+    <div>Мгновенное подтверждение</div>
+  </div>
+</header>
+<div class="wizard-wrap">
+  <div class="steps-indicator">
+    <div class="step-dot active" data-n="1" id="dot1">Услуги</div>
+    <div class="step-dot" data-n="2" id="dot2">Время</div>
+    <div class="step-dot" data-n="3" id="dot3">Контакты</div>
+  </div>
+  <div class="panel-box" id="step1">
+    <h2>Выберите услуги</h2>
+    <p class="hint" id="step1Hint">Загрузка…</p>
+    <div id="calcInputWrap"></div>
+    <div id="classTag" class="class-tag"><span id="classTagText">Начните вводить</span></div>
+    <div class="svc-list" id="svcList"></div>
+    <div class="panel-actions">
+      <span></span>
+      <button class="btn" id="toStep2" type="button" disabled>Далее — выбрать время</button>
+    </div>
+  </div>
+  <div class="panel-box" id="step2" style="display:none;">
+    <h2>Выберите дату и время</h2>
+    <p class="hint">Показываем, сколько мест осталось на каждый час</p>
+    <div class="day-chips" id="dayChips"></div>
+    <div id="nearestWrap"></div>
+    <div id="slotGroups"></div>
+    <div class="panel-actions">
+      <button class="btn btn-ghost" id="backTo1" type="button">Назад</button>
+      <button class="btn" id="toStep3" type="button" disabled>Далее — контакты</button>
+    </div>
+  </div>
+  <div class="panel-box" id="step3" style="display:none;">
+    <h2>Контакты и подтверждение</h2>
+    <p class="hint">Оплата на месте</p>
+    <div class="summary" id="summaryBox"></div>
+    <div class="row-2">
+      <div class="field"><label for="name">Имя</label><input id="name" required placeholder="Как к вам обращаться" maxlength="100" autocomplete="name"></div>
+      <div class="field"><label for="phone">Телефон</label><input id="phone" type="tel" required placeholder="+7 ..." maxlength="30" autocomplete="tel"></div>
+    </div>
+    <div id="status" class="msg" role="alert"></div>
+    <div class="panel-actions">
+      <button class="btn btn-ghost" id="backTo2" type="button">Назад</button>
+      <button class="btn" id="confirmBtn" type="button">Подтвердить запись</button>
+    </div>
+  </div>
+  <div class="panel-box" id="stepDone" style="display:none;">
+    <div class="confirm-box">
+      <div class="check">✓</div>
+      <h2>Запись подтверждена</h2>
+      <div class="id" id="bookingIdOut"></div>
+      <p class="hint" style="max-width:44ch;margin:0 auto 20px;">Сохраните номер записи — по нему и телефону можно найти или отменить запись в блоке «Моя запись» ниже.</p>
+      <button class="btn" id="newBookingBtn" type="button">Записать ещё раз</button>
+    </div>
+  </div>
+</div>
+<div class="lookup">
+  <button class="lookup-toggle" id="lookupToggle" type="button">Моя запись — найти или отменить</button>
+  <div class="lookup-panel" id="lookupPanel">
+    <div class="row-2">
+      <div class="field"><label for="lookupPhone">Телефон</label><input id="lookupPhone" type="tel" placeholder="+7 ..." maxlength="30"></div>
+      <div class="field" style="display:flex;align-items:flex-end;"><button class="btn" id="lookupBtn" type="button" style="width:100%;">Найти</button></div>
+    </div>
+    <div id="lookupResult"></div>
+  </div>
+</div>
+<footer>
+  <div class="wrap">
+    <div id="footerName">RapidLink</div>
+    <div>Круглосуточно, без выходных</div>
+  </div>
+</footer>
+<div class="sticky-bar" id="stickyBar">
+  <div class="wrap">
+    <div class="total">Итого: <span id="stickyAmount">0 ₽</span></div>
+    <button class="btn" id="stickyBtn" type="button">Далее</button>
+  </div>
+</div>
+
+<script src="/cars.js"></script>
+<script>
+(function () {
+  'use strict';
+  var API = '';
+  var CATALOG = null, svcByClass = {}, selectedClass = null, classLocked = false, carText = '';
+  var selectedServices = new Set(), selectedDate = null, selectedHour = null;
+  var bound = false, isWash = false;
+  var TENANT = null;
+  try { TENANT = new URLSearchParams(location.search).get('tenant'); } catch (e) {}
+
+  var BRAND = { title: 'RapidLink' };
+  // Запасной поиск, если /cars.js не загрузился
+  var FALLBACK = [
+    { c: 0, k: ['мотоцикл','скутер','мопед','питбайк','ducati','harley'] },
+    { c: 1, k: ['квадроцикл','atv','polaris','can-am','cfmoto','grizzly','снегоход'] },
+    { c: 2, k: ['ваз','гранта','vesta','калина','solaris','солярис','rio','logan','polo','focus','octavia','corolla','camry'] },
+    { c: 3, k: ['creta','крета','qashqai','кашкай','sportage','tucson','rav4','tiguan','duster','tiggo','kaptur'] },
+    { c: 4, k: ['land cruiser','крузер','patrol','уаз','нива','niva','x5','prado','пикап'] },
+    { c: 5, k: ['transporter','sprinter','спринтер','transit','газель','largus','ларгус'] },
+    { c: 6, k: ['прицеп','trailer'] }
+  ];
+  var CLASS_HINTS = ['мотоцикл, скутер', 'квадроцикл, снегоход', 'седан, хэтчбек, универсал', 'кроссовер, паркетник', 'внедорожник, пикап', 'минивэн, микроавтобус, фургон', 'прицеп'];
+  var ST = { confirmed: 'Ожидает', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменена' };
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function rub(n) { return (Number(n) || 0).toLocaleString('ru-RU') + ' ₽'; }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function fmtDate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function say(el, cls, text) { el.className = 'msg' + (cls ? ' ' + cls : ''); el.textContent = text; }
+  function withTenant(path) {
+    if (!TENANT) return path;
+    return path + (path.indexOf('?') === -1 ? '?' : '&') + 'tenant=' + encodeURIComponent(TENANT);
+  }
+
+  // Запрос с таймаутом: сервер на бесплатном хостинге может просыпаться до минуты
+  function api(path, opts, timeoutMs) {
+    opts = opts || {};
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = null;
+    if (ctl) { opts.signal = ctl.signal; timer = setTimeout(function () { ctl.abort(); }, timeoutMs || 30000); }
+    return fetch(API + withTenant(path), opts).then(function (res) {
+      if (timer) clearTimeout(timer);
+      return res.json().catch(function () { return null; }).then(function (data) {
+        if (!res.ok) { var err = new Error((data && data.error) || ('http_' + res.status)); err.status = res.status; err.data = data; throw err; }
+        return data;
+      });
+    }, function (e) { if (timer) clearTimeout(timer); throw e; });
+  }
+  function apiRetry(path, tries, delay) {
+    return api(path, undefined, 25000).catch(function (e) {
+      if (tries <= 1 || (e.status && e.status >= 400 && e.status < 500)) throw e;
+      return new Promise(function (r) { setTimeout(r, delay); }).then(function () { return apiRetry(path, tries - 1, delay); });
+    });
+  }
+
+  /* ---------- загрузка каталога ---------- */
+  function boot() {
+    $('step1Hint').textContent = 'Загружаем каталог услуг…';
+    var slow = setTimeout(function () {
+      $('heroLede').textContent = 'Сервер просыпается после простоя, это может занять до минуты. Подождите, страница загрузится сама.';
+    }, 6000);
+    return apiRetry('/api/vertical', 8, 5000).then(function (cat) {
+      clearTimeout(slow);
+      CATALOG = cat;
+      $('brandName').textContent = cat.businessName || BRAND.title;
+      document.title = (cat.businessName || BRAND.title) + ' — запись онлайн';
+      $('footerName').textContent = (cat.businessName || BRAND.title) + (cat.city ? ' · ' + cat.city : '');
+      $('cityBadge').textContent = cat.city || '';
+      $('capacityNum').textContent = cat.capacity || 2;
+
+      var vc = cat.vertical_code || 'wash';
+      var heroByVertical = {
+        wash: { title: 'Мойка, которая сама знает цену вашего транспорта', lede: 'Введите марку и модель — система определит класс. Не нашлась — выберите класс сами.' },
+        barber: { title: 'Стрижка, которая подходит именно вам', lede: 'Выберите категорию и услугу.' },
+        massage: { title: 'Массаж, который снимает усталость', lede: 'Выберите тип массажа.' },
+        detailing: { title: 'Детейлинг, который возвращает автомобиль к жизни', lede: 'Выберите пакет.' },
+        tire: { title: 'Шиномонтаж без очередей', lede: 'Выберите радиус колёс.' }
+      };
+      var hero = heroByVertical[vc] || { title: cat.businessName || BRAND.title, lede: 'Запишитесь онлайн за минуту.' };
+      $('heroTitle').textContent = hero.title;
+      $('heroLede').textContent = hero.lede;
+
+      svcByClass = {};
+      (cat.services || []).forEach(function (s) {
+        if (!svcByClass[s.vehicle_class]) svcByClass[s.vehicle_class] = [];
+        svcByClass[s.vehicle_class].push(s);
+      });
+
+      isWash = (vc === 'wash');
+      $('step1Hint').textContent = isWash ? 'Введите марку и модель — класс определится автоматически, либо выберите его вручную.' : 'Выберите категорию.';
+      renderClassInputs();
+      renderSvcList();
+      goStep(1);
+      bindEvents();
+    }).catch(function () {
+      clearTimeout(slow);
+      $('heroTitle').textContent = 'Не удалось загрузить';
+      $('heroLede').textContent = 'Сервер не ответил. Проверьте интернет и попробуйте ещё раз.';
+      $('step1').innerHTML = '<p class="hint" style="color:var(--danger);">Не удалось загрузить каталог услуг.</p><button class="btn retry" id="retryBtn" type="button">Повторить</button>';
+      $('retryBtn').addEventListener('click', function () { location.reload(); });
+    });
+  }
+
+  function bindEvents() {
+    if (bound) return; bound = true;
+    $('toStep2').addEventListener('click', function () { goStep(2); });
+    $('backTo1').addEventListener('click', function () { goStep(1); });
+    $('toStep3').addEventListener('click', function () { if (selectedHour !== null) goStep(3); });
+    $('backTo2').addEventListener('click', function () { goStep(2); });
+    $('confirmBtn').addEventListener('click', confirmBooking);
+    $('newBookingBtn').addEventListener('click', resetWizard);
+    $('lookupToggle').addEventListener('click', function () { $('lookupPanel').classList.toggle('open'); });
+    $('lookupBtn').addEventListener('click', doLookup);
+    $('lookupPhone').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLookup(); });
+    $('topBookBtn').addEventListener('click', function () {
+      var inp = $('carModel') || $('classSelect');
+      if (inp) { inp.focus(); inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    });
+    $('stickyBtn').addEventListener('click', function () {
+      var st = getActiveStep();
+      if (st === 1) goStep(2);
+      else if (st === 2) { if (selectedHour !== null) goStep(3); }
+      else confirmBooking();
+    });
+  }
+
+  /* ---------- определение класса ---------- */
+  function classIdByIndex(i) {
+    var c = CATALOG.classes[i];
+    return c ? c.id : null;
+  }
+  function detectClass(text) {
+    var r = null;
+    if (window.RLCars) { try { r = window.RLCars.detect(text); } catch (e) { r = null; } }
+    if (r) return r;
+    var t = String(text || '').toLowerCase().trim();
+    if (!t) return null;
+    for (var i = 0; i < FALLBACK.length; i++) {
+      for (var j = 0; j < FALLBACK[i].k.length; j++) {
+        if (t.indexOf(FALLBACK[i].k[j]) !== -1) return { cls: FALLBACK[i].c, brand: null, model: FALLBACK[i].k[j], exact: false };
+      }
+    }
+    return { cls: null, brand: null, model: null };
+  }
+
+  function renderClassInputs() {
+    var wrap = $('calcInputWrap');
+    var hints = CATALOG.classes.length === CLASS_HINTS.length;
+    var opts = CATALOG.classes.map(function (c, i) {
+      return '<option value="' + esc(c.id) + '">' + esc(c.name) + (hints ? ' (' + esc(CLASS_HINTS[i]) + ')' : '') + '</option>';
+    }).join('');
+    var html = '';
+    if (isWash) {
+      html += '<label for="carModel">Марка и модель</label><input id="carModel" type="text" class="input" placeholder="Например: Hyundai Creta, Yamaha Grizzly, Газель" autocomplete="off" maxlength="100">' +
+        '<div class="car-help">Не нашли свою модель? Впишите как есть и выберите класс ниже.</div>';
+    }
+    html += '<div class="class-pick" id="classPick"><label for="classSelect">' + (isWash ? 'Класс транспорта' : 'Категория') + '</label>' +
+      '<select id="classSelect" class="input"><option value="">— выберите —</option>' + opts + '</select></div>';
+    wrap.innerHTML = html;
+    if (isWash) {
+      $('carModel').addEventListener('input', function () {
+        carText = $('carModel').value.trim();
+        if (!carText) { classLocked = false; }
+        if (classLocked) return;
+        var r = detectClass(carText);
+        var id = (r && r.cls !== null && r.cls !== undefined) ? classIdByIndex(r.cls) : null;
+        setClass(id, true, r);
+      });
+    }
+    $('classSelect').addEventListener('change', function () {
+      classLocked = !!this.value;
+      setClass(this.value ? parseInt(this.value, 10) : null, false, null);
+    });
+    renderClassTag(null);
+  }
+
+  function setClass(id, fromAuto, info) {
+    if (id !== selectedClass) selectedServices.clear();
+    selectedClass = id;
+    if ($('classSelect')) $('classSelect').value = id === null ? '' : String(id);
+    renderClassTag(fromAuto ? info : null);
+    renderSvcList();
+  }
+
+  function renderClassTag(info) {
+    var tag = $('classTag'), tagText = $('classTagText'), pick = $('classPick');
+    var typed = isWash && $('carModel') && $('carModel').value.trim();
+    if (!selectedClass) {
+      tag.className = 'class-tag';
+      if (typed) {
+        tagText.textContent = (info && info.brand ? 'Марка распознана, но модель нет — выберите класс из списка ниже' : 'Не нашли такую модель — выберите класс из списка ниже');
+        if (pick) pick.classList.add('need');
+      } else {
+        tagText.textContent = isWash ? 'Начните вводить марку/модель или выберите класс' : 'Выберите категорию';
+        if (pick) pick.classList.remove('need');
+      }
+      return;
+    }
+    if (pick) pick.classList.remove('need');
+    var cls = CATALOG.classes.filter(function (c) { return c.id === selectedClass; })[0];
+    if (!cls) { tag.className = 'class-tag'; tagText.textContent = 'Класс не распознан'; return; }
+    tag.className = 'class-tag detected';
+    tagText.textContent = '✓ ' + cls.name + (classLocked ? ' (выбран вручную)' : '');
+  }
+
+  /* ---------- услуги ---------- */
+  function renderSvcList() {
+    var list = $('svcList');
+    if (!selectedClass) { list.innerHTML = ''; updateStep1Btn(); updateSticky(); return; }
+    var svc = svcByClass[selectedClass] || [];
+    if (!svc.length) { list.innerHTML = '<p class="hint">Для этой категории пока нет услуг</p>'; updateStep1Btn(); return; }
+    list.innerHTML = svc.map(function (s) {
+      return '<div class="svc-row' + (selectedServices.has(s.id) ? ' checked' : '') + '" data-id="' + esc(s.id) + '" role="checkbox" tabindex="0" aria-checked="' + (selectedServices.has(s.id) ? 'true' : 'false') + '"><div class="left"><div class="checkbox"></div><span class="svc-name">' + esc(s.name) + '</span></div><div class="price">' + rub(s.price) + '</div></div>';
+    }).join('');
+    list.querySelectorAll('.svc-row').forEach(function (row) {
+      function toggle() {
+        var id = parseInt(row.getAttribute('data-id'), 10);
+        if (selectedServices.has(id)) selectedServices.delete(id); else selectedServices.add(id);
+        row.classList.toggle('checked');
+        row.setAttribute('aria-checked', selectedServices.has(id) ? 'true' : 'false');
+        updateStep1Btn(); updateSticky();
+      }
+      row.addEventListener('click', toggle);
+      row.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); } });
+    });
+    updateStep1Btn(); updateSticky();
+  }
+  function currentTotal() {
+    if (!selectedClass) return 0;
+    var sum = 0;
+    (svcByClass[selectedClass] || []).forEach(function (s) { if (selectedServices.has(s.id)) sum += s.price; });
+    return sum;
+  }
+  function updateStep1Btn() { $('toStep2').disabled = selectedServices.size === 0; }
+
+  function updateSticky() {
+    var bar = $('stickyBar');
+    var doneVisible = $('stepDone').style.display !== 'none';
+    var onStep1 = $('step1').style.display !== 'none';
+    if (!selectedServices.size || doneVisible || onStep1) { bar.classList.remove('show'); return; }
+    bar.classList.add('show');
+    $('stickyAmount').textContent = rub(currentTotal());
+    $('stickyBtn').textContent = getActiveStep() === 3 ? 'Подтвердить' : 'Далее';
+  }
+  function getActiveStep() {
+    if ($('step1').style.display !== 'none') return 1;
+    if ($('step2').style.display !== 'none') return 2;
+    if ($('step3').style.display !== 'none') return 3;
+    return 0;
+  }
+  function goStep(n) {
+    [1, 2, 3].forEach(function (i) {
+      $('step' + i).style.display = (i === n) ? '' : 'none';
+      var dot = $('dot' + i);
+      dot.classList.toggle('active', i === n);
+      dot.classList.toggle('done', i < n);
+    });
+    $('stepDone').style.display = 'none';
+    if (n === 2) renderStep2();
+    if (n === 3) renderSummary();
+    updateSticky();
+  }
+
+  /* ---------- дата и время ---------- */
+  function next7Days() {
+    var days = [], today = new Date();
+    for (var i = 0; i < 7; i++) { var d = new Date(today); d.setDate(today.getDate() + i); days.push(d); }
+    return days;
+  }
+  function renderStep2() {
+    if (!selectedDate) selectedDate = fmtDate(new Date());
+    var chips = $('dayChips'), days = next7Days();
+    chips.innerHTML = days.map(function (d, i) {
+      var iso = fmtDate(d);
+      var label = i === 0 ? 'Сегодня' : (i === 1 ? 'Завтра' : d.toLocaleDateString('ru-RU', { weekday: 'short' }));
+      return '<div class="day-chip ' + (iso === selectedDate ? 'active' : '') + '" data-date="' + iso + '">' + esc(label) + '<span class="d">' + d.getDate() + '</span></div>';
+    }).join('');
+    chips.querySelectorAll('.day-chip').forEach(function (ch) {
+      ch.addEventListener('click', function () { selectedDate = ch.getAttribute('data-date'); selectedHour = null; renderStep2(); });
+    });
+    $('slotGroups').innerHTML = '<p class="hint">Загружаем время…</p>';
+    $('nearestWrap').innerHTML = '';
+    return api('/api/slots?date=' + encodeURIComponent(selectedDate)).then(function (data) {
+      var remaining = {};
+      data.slots.forEach(function (s) { remaining[s.hour] = s.remaining; });
+      renderSlotGroups(remaining);
+    }).catch(function () {
+      $('slotGroups').innerHTML = '<p class="hint" style="color:var(--danger);">Не удалось загрузить время. Нажмите «Назад» и повторите.</p>';
+    });
+  }
+  var TIME_GROUPS = [
+    { label: 'Утро', from: 6, to: 11 }, { label: 'День', from: 12, to: 17 },
+    { label: 'Вечер', from: 18, to: 23 }, { label: 'Ночь', from: 0, to: 5 }
+  ];
+  function isPast(h) {
+    var now = new Date();
+    return selectedDate === fmtDate(now) && h <= now.getHours();
+  }
+  function renderSlotGroups(remaining) {
+    var wrap = $('slotGroups'); wrap.innerHTML = '';
+    var nearest = null;
+    for (var h0 = 0; h0 < 24; h0++) { if ((remaining[h0] || 0) > 0 && !isPast(h0)) { nearest = h0; break; } }
+    if (selectedHour !== null && (isPast(selectedHour) || (remaining[selectedHour] || 0) <= 0)) selectedHour = null;
+    if (nearest === null) {
+      $('nearestWrap').innerHTML = '<div class="nearest">На эту дату свободных мест нет.</div>';
+    } else if (selectedHour === null) {
+      $('nearestWrap').innerHTML = '<div class="nearest">Ближайшее время: <b id="nearestPick">' + pad(nearest) + ':00</b></div>';
+      $('nearestPick').addEventListener('click', function () { selectedHour = nearest; renderStep2(); });
+    } else { $('nearestWrap').innerHTML = ''; }
+    TIME_GROUPS.forEach(function (group) {
+      var div = document.createElement('div');
+      div.className = 'slot-group';
+      div.innerHTML = '<h4>' + esc(group.label) + '</h4><div class="slots"></div>';
+      var slotsEl = div.querySelector('.slots');
+      for (var h = group.from; h <= group.to; h++) {
+        (function (h) {
+          var rem = remaining[h] || 0, past = isPast(h), full = rem <= 0 || past;
+          var el = document.createElement('div');
+          el.className = 'slot' + (full ? ' full' : '') + (selectedHour === h ? ' selected' : '');
+          el.innerHTML = pad(h) + ':00<span class="cap">' + (past ? 'прошло' : (rem <= 0 ? 'занято' : 'ещё ' + rem)) + '</span>';
+          if (!full) el.addEventListener('click', function () { selectedHour = h; renderStep2(); });
+          slotsEl.appendChild(el);
+        })(h);
+      }
+      wrap.appendChild(div);
+    });
+    $('toStep3').disabled = (selectedHour === null);
+    updateSticky();
+  }
+
+  /* ---------- подтверждение ---------- */
+  function renderSummary() {
+    var svc = svcByClass[selectedClass] || [];
+    var rows = svc.filter(function (s) { return selectedServices.has(s.id); }).map(function (s) {
+      return '<div class="summary-row"><span>' + esc(s.name) + '</span><span>' + rub(s.price) + '</span></div>';
+    }).join('');
+    var cls = CATALOG.classes.filter(function (c) { return c.id === selectedClass; })[0];
+    var dateLabel = new Date(selectedDate + 'T12:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    $('summaryBox').innerHTML =
+      (carText ? '<div class="summary-row"><span>Транспорт</span><span>' + esc(carText) + '</span></div>' : '') +
+      '<div class="summary-row"><span>Категория</span><span>' + esc(cls ? cls.name : '') + '</span></div>' + rows +
+      '<div class="summary-row"><span>Дата и время</span><span>' + esc(dateLabel) + ', ' + pad(selectedHour) + ':00</span></div>' +
+      '<div class="summary-row total"><span>Итого</span><span>' + rub(currentTotal()) + '</span></div>';
+  }
+
+  function confirmBooking() {
+    var name = $('name').value.trim(), phone = $('phone').value.trim();
+    if (!name || !phone) { say($('status'), 'err', 'Заполните имя и телефон.'); return; }
+    if (phone.replace(/\D/g, '').length < 10) { say($('status'), 'err', 'Проверьте номер телефона.'); return; }
+    var btn = $('confirmBtn');
+    btn.disabled = true; say($('status'), '', 'Отправляем…');
+    api('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name, phone: phone, car: carText, vehicle_class_id: selectedClass,
+        service_ids: Array.from(selectedServices), date: selectedDate, hour: selectedHour
+      })
+    }, 40000).then(function (res) {
+      $('bookingIdOut').textContent = '№ ' + res.booking.booking_code;
+      [1, 2, 3].forEach(function (i) { $('step' + i).style.display = 'none'; });
+      $('stepDone').style.display = '';
+      document.querySelectorAll('.step-dot').forEach(function (d) { d.classList.add('done'); });
+      say($('status'), '', '');
+      updateSticky();
+    }).catch(function (e) {
+      var code = e.data && e.data.error;
+      if (code === 'slot_full') {
+        say($('status'), 'err', 'Это время только что заполнилось — выберите другое.');
+        selectedHour = null; goStep(2);
+      } else if (code === 'too_many_requests') {
+        say($('status'), 'err', 'Слишком много попыток. Подождите минуту.');
+      } else if (code === 'invalid_services') {
+        say($('status'), 'err', 'Услуги изменились. Вернитесь назад и выберите заново.');
+      } else if (code === 'tenant_not_found') {
+        say($('status'), 'err', 'Эта страница записи больше не работает.');
+      } else {
+        say($('status'), 'err', 'Не удалось отправить запись. Проверьте интернет и попробуйте ещё раз.');
+      }
+    }).then(function () { btn.disabled = false; });
+  }
+
+  function resetWizard() {
+    selectedServices.clear(); selectedHour = null; selectedDate = null; classLocked = false; carText = '';
+    selectedClass = null;
+    if ($('carModel')) $('carModel').value = '';
+    if ($('classSelect')) $('classSelect').value = '';
+    $('name').value = ''; $('phone').value = '';
+    say($('status'), '', '');
+    renderClassTag(null); renderSvcList(); goStep(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---------- моя запись ---------- */
+  function doLookup() {
+    var phone = $('lookupPhone').value.trim(), box = $('lookupResult');
+    if (phone.replace(/\D/g, '').length < 10) { box.innerHTML = '<div class="lookup-result">Введите номер телефона.</div>'; return; }
+    box.innerHTML = '<div class="lookup-result">Ищем…</div>';
+    api('/api/bookings?phone=' + encodeURIComponent(phone)).then(function (res) {
+      var list = (res.bookings || []).slice(0, 20);
+      if (!list.length) { box.innerHTML = '<div class="lookup-result">Записей с таким номером не найдено.</div>'; return; }
+      box.innerHTML = '<div class="lookup-result">' + list.map(function (b) {
+        return '<div class="b-row"><div><b class="mono">' + esc(b.booking_code) + '</b> · ' + esc(b.date) + ', ' + pad(b.hour) + ':00' +
+          (b.car ? ' · ' + esc(b.car) : '') + '<br><span class="text-dim2">' + esc(ST[b.status] || b.status) + ' · ' + rub(b.total) + '</span></div>' +
+          (b.status === 'confirmed' ? '<button class="btn btn-small btn-danger" type="button" data-cancel="' + esc(b.booking_code) + '">Отменить</button>' : '') + '</div>';
+      }).join('') + '</div>';
+      box.querySelectorAll('button[data-cancel]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (!confirm('Отменить запись ' + btn.getAttribute('data-cancel') + '?')) return;
+          btn.disabled = true;
+          api('/api/bookings/' + encodeURIComponent(btn.getAttribute('data-cancel')), {
+            method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: phone })
+          }).then(doLookup).catch(function () { alert('Не удалось отменить запись. Попробуйте ещё раз.'); btn.disabled = false; });
+        });
+      });
+    }).catch(function () { box.innerHTML = '<div class="lookup-result">Не удалось выполнить поиск. Попробуйте ещё раз.</div>'; });
+  }
+
+  boot();
+})();
+</script>
+<script src="/theme.js"></script>
+</body>
+</html>
