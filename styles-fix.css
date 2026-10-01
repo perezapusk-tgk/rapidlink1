@@ -1,0 +1,48 @@
+/* RapidLink — дополнения к styles.css. Подключается ПОСЛЕ него: <link rel="stylesheet" href="/styles-fix.css"> */
+
+/* родные элементы (календарь, список, прокрутка) в цвет текущей темы */
+[data-theme="dark"] { color-scheme: dark; }
+[data-theme="light"] { color-scheme: light; }
+
+/* Поле без атрибута type (например, «Имя») не попадало под правила input[type="text"] и оставалось
+   белым с чёрным системным шрифтом. Приводим такие поля к общему виду. */
+input:not([type]), input[type="search"], input[type="month"], input[type="url"], input[type="datetime-local"] {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--bg-sunken);
+  color: var(--fg);
+  font-size: 0.94rem;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:not([type]):focus, input[type="search"]:focus, input[type="month"]:focus, input[type="url"]:focus, input[type="datetime-local"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+  background: var(--bg-elev);
+}
+
+/* единый шрифт, цвет текста и курсор во всех полях */
+input, select, textarea { font-family: inherit; color: var(--fg); caret-color: var(--accent); }
+input::placeholder, textarea::placeholder { color: var(--fg-dim3); opacity: 1; }
+select option { background: var(--bg-elev); color: var(--fg); }
+
+/* автозаполнение браузера не должно перекрашивать поле */
+input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus,
+textarea:-webkit-autofill, select:-webkit-autofill {
+  -webkit-text-fill-color: var(--fg);
+  caret-color: var(--fg);
+  box-shadow: 0 0 0 1000px var(--bg-sunken) inset;
+  border: 1px solid var(--line);
+  transition: background-color 9999s ease-out 0s;
+}
+
+/* флажки и переключатели не растягиваются на всю ширину */
+input[type="checkbox"], input[type="radio"] { width: auto; -webkit-appearance: auto; appearance: auto; accent-color: var(--accent); }
+
+/* кнопка темы больше не лежит поверх заголовков и кнопок */
+.theme-toggle { top: auto; bottom: 88px; right: 12px; width: 38px; height: 38px; font-size: 1rem; opacity: 0.92; }
+@media (min-width: 900px) { .theme-toggle { bottom: 20px; right: 20px; } }
