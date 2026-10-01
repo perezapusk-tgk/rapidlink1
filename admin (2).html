@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Админка — RapidLink</title>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/styles-fix.css">
+<style>
+.washer-card{background:var(--bg-sunken);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.washer-card .info{flex:1;min-width:220px}
+.washer-card .name{font-weight:700;font-size:1rem;color:var(--fg)}
+.washer-card .sub{font-size:.82rem;color:var(--fg-dim2);margin-top:4px}
+.washer-card .comm{font-family:'JetBrains Mono',monospace;font-size:.9rem;color:var(--ok);font-weight:700}
+.washer-card .actions{display:flex;gap:6px;flex-wrap:wrap}
+.editable{background:var(--bg-sunken);border-radius:6px;padding:6px 8px;outline:none;border:1px solid transparent}
+.editable:focus{border-color:var(--accent);background:var(--bg-elev)}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1>Rapid<span style="color:var(--accent);">Link</span> · Админка</h1>
+      <div class="sub" id="businessName">—</div>
+    </div>
+    <button class="btn btn-ghost btn-small" id="logoutBtn" type="button" style="display:none;">Выйти</button>
+  </div>
+
+  <div class="card" id="loginCard">
+    <h3 style="margin-top:0;">Вход</h3>
+    <div class="row">
+      <input id="user" class="input" placeholder="логин" autocomplete="username">
+      <input id="pass" type="password" class="input" placeholder="пароль" autocomplete="current-password">
+      <button class="btn" id="loginBtn" type="button">Войти</button>
+    </div>
+    <div class="msg" id="loginMsg" role="alert"></div>
+  </div>
+
+  <div id="main" style="display:none;">
+    <div class="tabs">
+      <button class="tab active" type="button" data-tab="bookings">Записи</button>
+      <button class="tab" type="button" data-tab="new">Новая запись</button>
+      <button class="tab" type="button" data-tab="report">Отчёт</button>
+      <button class="tab" type="button" data-tab="washers">Мойщики</button>
+      <button class="tab" type="button" data-tab="services">Услуги</button>
+    </div>
+
+    <div id="panel-bookings">
+      <div class="stats">
+        <div class="stat"><div class="stat-icon">📋</div><div class="lbl">Записей</div><div class="val accent" id="statBookings">0</div></div>
+        <div class="stat"><div class="stat-icon">💰</div><div class="lbl">Выручка</div><div class="val" id="statDayRevenue">0 ₽</div></div>
+        <div class="stat stat-ok"><div class="stat-icon">✅</div><div class="lbl">Готово</div><div class="val ok" id="statDone">0</div></div>
+        <div class="stat"><div class="stat-icon">📊</div><div class="lbl">Средний чек</div><div class="val" id="statAvg">0 ₽</div></div>
+      </div>
+      <div class="card">
+        <div class="row">
+          <label>Дата <input id="date" type="date" class="input"></label>
+          <button class="btn" id="loadBtn" type="button">Загрузить</button>
+          <button class="btn btn-ghost" id="exportBtn" type="button">Экспорт CSV</button>
+        </div>
+        <div class="msg" id="bookingsMsg" role="alert"></div>
+      </div>
+      <div id="bookingsList"></div>
+    </div>
+
+    <div id="panel-new" style="display:none;">
+      <div class="card">
+        <h3 id="nbTitle" style="margin-top:0;">Записать клиента вручную</h3>
+        <div id="nbEditBar" style="display:none;margin-bottom:12px;padding:10px 14px;border:1px solid var(--warn);border-radius:10px;background:var(--warn-dim);">
+          <span id="nbEditTitle" class="fw-700"></span>
+          <div class="row-2" style="margin-top:10px;">
+            <div class="field" style="margin:0;"><label for="nbStatus">Статус</label>
+              <select id="nbStatus" class="input"><option value="confirmed">Ожидает</option><option value="in_progress">В работе</option><option value="completed">Готово</option><option value="cancelled">Отменена</option></select></div>
+            <div class="field" style="margin:0;display:flex;align-items:flex-end;"><button class="btn btn-ghost" id="nbCancelEdit" type="button">Отменить редактирование</button></div>
+          </div>
+        </div>
+        <p class="text-dim2" style="font-size:.85rem;">Для тех, кто приехал или позвонил. Введите марку и модель: класс определится сам. Если модели нет в базе, выберите класс из списка. Услуги можно выбрать из каталога и добавить свои.</p>
+        <div class="row-2">
+          <div class="field"><label for="nbName">Имя клиента</label><input id="nbName" maxlength="100" autocomplete="off"></div>
+          <div class="field"><label for="nbPhone">Телефон (можно оставить пустым)</label><input id="nbPhone" type="tel" maxlength="30" autocomplete="off"></div>
+        </div>
+        <div class="row-2">
+          <div class="field"><label for="nbCar">Марка и модель (вручную)</label><input id="nbCar" maxlength="100" autocomplete="off" placeholder="Например: Kia Rio, Yamaha Grizzly"></div>
+          <div class="field"><label for="nbClass">Класс</label><select id="nbClass" class="input"></select></div>
+        </div>
+        <div id="nbClassTag" class="text-dim2" style="font-size:.85rem;margin-bottom:10px;"></div>
+        <div class="field"><label>Услуги из каталога</label><div id="nbServices" class="text-dim2">Сначала выберите класс</div></div>
+        <div class="field"><label>Своя услуга (вручную)</label>
+          <div class="row" style="margin-bottom:6px;">
+            <input id="nbExName" maxlength="100" placeholder="Название, например: Полировка фар" style="flex:2;">
+            <input id="nbExPrice" type="number" min="0" placeholder="Цена, ₽" style="flex:1;">
+            <button class="btn btn-ghost" id="nbExAdd" type="button" style="flex:0 0 auto;">+ Добавить</button>
+          </div>
+          <div id="nbExList"></div>
+        </div>
+        <div class="row-2">
+          <div class="field"><label for="nbDate">Дата</label><input id="nbDate" type="date"></div>
+          <div class="field"><label for="nbHour">Время</label><select id="nbHour" class="input"></select></div>
+        </div>
+        <div class="row-2">
+          <div class="field"><label for="nbWasher">Мойщик</label><select id="nbWasher" class="input"></select></div>
+          <div class="field"><label>Лимит слота</label><label style="display:flex;gap:8px;align-items:center;margin:0;color:var(--fg);"><input id="nbForce" type="checkbox" style="width:auto;"> Записать сверх лимита (2 в час)</label></div>
+        </div>
+        <div class="row-2">
+          <div class="field"><label for="nbTotalOverride">Итого вручную, ₽ (пусто = посчитать по услугам)</label><input id="nbTotalOverride" type="number" min="0"></div>
+          <div class="field" style="display:flex;align-items:flex-end;"><div id="nbTotal" class="fw-700" style="font-size:1.1rem;">Итого: 0 ₽</div></div>
+        </div>
+        <button class="btn" id="nbSubmit" type="button">Записать</button>
+        <div class="msg" id="nbMsg" role="alert"></div>
+      </div>
+    </div>
+
+    <div id="panel-report" style="display:none;">
+      <div class="card">
+        <div class="row">
+          <label>Дата <input id="reportDate" type="date" class="input"></label>
+          <button class="btn" id="loadReportBtn" type="button">Показать</button>
+        </div>
+        <div class="msg" id="reportMsg" role="alert"></div>
+      </div>
+      <div class="card card-pad-0"><div class="table-wrap">
+        <table class="table" id="reportTb">
+          <thead><tr><th>Мойщик</th><th>Записей</th><th>Выручка</th><th>Штрафы</th><th>К выплате</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <div id="panel-washers" style="display:none;">
+      <div class="flex-between mb-2" style="flex-wrap:wrap;gap:10px;">
+        <h3 style="margin:0;">Мойщики</h3>
+        <button class="btn" id="addWasherBtn" type="button">+ Добавить</button>
+      </div>
+      <p class="text-dim2" style="font-size:.85rem;">Чтобы мойщик мог войти в кабинет (/washer.html), задайте ему PIN кнопкой «PIN».</p>
+      <div id="washersList"></div>
+      <div class="msg" id="washersMsg" role="alert"></div>
+
+      <div class="card" id="addWasherCard" style="display:none;">
+        <h3 style="margin-top:0;">Новый мойщик</h3>
+        <div class="row">
+          <input id="newWasherName" class="input" placeholder="Имя" maxlength="100">
+          <input id="newWasherPhone" class="input" placeholder="Телефон" type="tel" maxlength="30">
+          <input id="newWasherComm" class="input" type="number" min="0" max="100" placeholder="Комиссия %" value="50" style="width:130px;">
+        </div>
+        <div class="row row-narrow mt-2">
+          <button class="btn btn-ghost" id="cancelWasherBtn" type="button">Отмена</button>
+          <button class="btn" id="saveWasherBtn" type="button">Сохранить</button>
+        </div>
+        <div class="msg" id="newWasherMsg" role="alert"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Начислить штраф</h3>
+        <div class="row">
+          <select id="fineWasher" class="input"></select>
+          <input id="fineAmount" type="number" min="1" class="input" placeholder="Сумма, ₽" style="width:130px;">
+          <input id="fineReason" class="input" placeholder="Причина" maxlength="200">
+        </div>
+        <button class="btn mt-2" id="fineBtn" type="button">Добавить штраф</button>
+        <div class="msg" id="fineMsg" role="alert"></div>
+      </div>
+    </div>
+
+    <div id="panel-services" style="display:none;">
+      <div class="card">
+        <div class="row-2">
+          <div class="field" style="margin:0;"><label for="svcClass">Класс транспорта: нажмите и выберите из списка</label><select id="svcClass" class="input"></select></div>
+          <div class="field" style="margin:0;display:flex;align-items:flex-end;"><label style="display:flex;gap:8px;align-items:center;margin:0;color:var(--fg);"><input id="svcShowHidden" type="checkbox" style="width:auto;"> Показывать скрытые услуги</label></div>
+        </div>
+        <p class="text-dim2" style="font-size:.85rem;margin:10px 0 0;">Ниже одним списком все услуги выбранного класса и их цены. Поменяли цену, время или название: нажмите «Сохранить». «Скрыть» убирает услугу с сайта клиентов, старые записи не ломаются.</p>
+      </div>
+      <div id="svcList"></div>
+      <div class="card">
+        <h3 style="margin-top:0;">Добавить новую услугу</h3>
+        <div class="row-2">
+          <div class="field"><label for="svcName">Название</label><input id="svcName" maxlength="120"></div>
+          <div class="field"><label for="svcDur">Длительность, мин</label><input id="svcDur" type="number" min="1" value="30"></div>
+        </div>
+        <div class="field"><label for="svcBase" id="svcBaseLbl">Базовая цена, ₽</label><input id="svcBase" type="number" min="0" placeholder="Например: 500"></div>
+        <p class="text-dim2" style="font-size:.85rem;">Цены для остальных классов подставятся сами по коэффициентам, их можно поправить руками. Снимите галочку у классов, где такой услуги нет.</p>
+        <div class="card card-pad-0"><div class="table-wrap"><table class="table"><thead><tr><th>Класс</th><th>Коэфф.</th><th>Цена, ₽</th><th>Есть</th></tr></thead><tbody id="svcAddTb"></tbody></table></div></div>
+        <button class="btn" id="svcAddBtn" type="button">Добавить услугу</button>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">Готовый набор дополнительных услуг</h3>
+        <p class="text-dim2" style="font-size:.85rem;">Добавит около 17 типовых услуг (пылесос, диски, антидождь, полировка фар и др.) сразу для нужных классов. Цены ориентировочные: после добавления поправьте под свой город. Уже существующие услуги не дублируются.</p>
+        <div class="row" style="align-items:end;">
+          <div class="field" style="margin:0;"><label for="svcPresetK">Множитель цен набора (1 = как в списке)</label><input id="svcPresetK" type="number" step="0.05" min="0.1" value="1"></div>
+          <button class="btn btn-ghost" id="svcPresetBtn" type="button" style="flex:0 0 auto;">Добавить набор</button>
+        </div>
+      </div>
+      <div class="msg" id="servicesMsg" role="alert"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/cars.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var token = '';
+  var washers = [], lastBookings = [];
+
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+  // ВАЖНО: имя клиента, телефон и т.п. приходят от посторонних людей. Всё, что вставляется в HTML, экранируется.
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function rub(n) { return (Number(n) || 0).toLocaleString('ru-RU') + ' ₽'; }
+  function todayIso() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function say(el, cls, text) { el.className = 'msg' + (cls ? ' ' + cls : ''); el.textContent = text; }
+  var STATUS = { confirmed: ['Ожидает', 'badge-accent'], in_progress: ['В работе', 'badge-warn'], completed: ['Готово', 'badge-ok'], cancelled: ['Отменена', 'badge-danger'] };
+  var ERR = { washer_has_bookings: 'Нельзя удалить: на мойщика назначены записи.', too_many_requests: 'Слишком много попыток. Подождите 10 минут.', 'washer not found': 'Мойщик не найден.', 'invalid washer': 'Мойщик не найден.', 'pin must be 4-6 digits': 'PIN: от 4 до 6 цифр.', slot_full: 'В этот час уже 2 записи. Отметьте «Записать сверх лимита», если нужно.', invalid_services: 'Услуги не подходят к выбранному классу.', 'invalid vehicle_class_id': 'Выберите класс.', 'invalid name': 'Укажите имя.', 'invalid phone': 'Проверьте телефон.', 'invalid washer': 'Мойщик не найден.', 'invalid extras': 'Проверьте свои услуги: название и цена.', 'invalid total': 'Итого вручную: введите число.', 'invalid status': 'Неверный статус.', 'not found': 'Запись не найдена.' };
+  function errText(e) { return ERR[(e.data && e.data.error) || e.message] || ('Ошибка: ' + (e.message || 'неизвестно')); }
+
+  function api(path, opts) {
+    opts = opts || {}; opts.headers = opts.headers || {};
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    return fetch(path, opts).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        if (!res.ok) {
+          var err = new Error((data && data.error) || ('http_' + res.status));
+          err.status = res.status; err.data = data;
+          if (res.status === 401 && token) logout();
+          throw err;
+        }
+        return data;
+      });
+    });
+  }
+  function send(method, path, body) {
+    var o = { method: method, headers: { 'Content-Type': 'application/json' } };
+    if (body !== undefined) o.body = JSON.stringify(body);
+    return api(path, o);
+  }
+
+  function showMain() {
+    $('loginCard').style.display = 'none';
+    $('main').style.display = 'block';
+    $('logoutBtn').style.display = '';
+    $('date').value = todayIso();
+    $('reportDate').value = todayIso();
+    loadWashers().then(loadBookings);
+    loadReport();
+  }
+  function logout() {
+    token = ''; store.del('admin_token');
+    $('main').style.display = 'none';
+    $('loginCard').style.display = '';
+    $('logoutBtn').style.display = 'none';
+  }
+
+  function doLogin() {
+    var msg = $('loginMsg'), btn = $('loginBtn');
+    btn.disabled = true; say(msg, '', 'Входим…');
+    send('POST', '/api/admin/login', { username: $('user').value, password: $('pass').value }).then(function (res) {
+      token = res.token; store.set('admin_token', token); say(msg, '', ''); showMain();
+    }).catch(function (e) {
+      say(msg, 'err', e.status === 429 ? ERR.too_many_requests : 'Неверный логин или пароль.');
+    }).then(function () { btn.disabled = false; });
+  }
+  $('loginBtn').addEventListener('click', doLogin);
+  $('pass').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+  $('logoutBtn').addEventListener('click', logout);
+
+  document.querySelectorAll('.tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      ['bookings', 'new', 'report', 'washers', 'services'].forEach(function (n) {
+        $('panel-' + n).style.display = (n === tab.dataset.tab) ? '' : 'none';
+      });
+      if (tab.dataset.tab === 'services') loadServices();
+      if (tab.dataset.tab === 'new') nbLoad();
+      if (tab.dataset.tab === 'washers') loadWashers();
+    });
+  });
+
+  /* ---------- записи ---------- */
+  function loadBookings() {
+    var msg = $('bookingsMsg'), list = $('bookingsList');
+    say(msg, '', '');
+    list.innerHTML = '<div class="empty"><div class="empty-title">Загружаем…</div></div>';
+    return api('/api/admin/bookings?date=' + encodeURIComponent($('date').value)).then(function (res) {
+      var bookings = res.bookings || [], revenue = 0, done = 0, confirmed = 0;
+      lastBookings = bookings;
+      bookings.forEach(function (b) {
+        if (b.status === 'completed') done++;
+        if (b.status === 'confirmed' || b.status === 'completed' || b.status === 'in_progress') { revenue += b.total; confirmed++; }
+      });
+      $('statBookings').textContent = bookings.length;
+      $('statDayRevenue').textContent = rub(revenue);
+      $('statDone').textContent = done;
+      $('statAvg').textContent = confirmed ? rub(Math.round(revenue / confirmed)) : '0 ₽';
+      if (!bookings.length) {
+        list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">На эту дату записей нет</div></div>';
+        return;
+      }
+      var wOpts = washers.map(function (w) { return '<option value="' + esc(w.id) + '">' + esc(w.name) + '</option>'; }).join('');
+      var html = '<div class="card card-pad-0"><div class="table-wrap"><table class="table"><thead><tr>' +
+        '<th>Код</th><th>Клиент</th><th>Телефон</th><th>Транспорт</th><th>Класс</th><th>Услуги</th><th>Время</th><th>Сумма</th><th>Статус</th><th>Мойщик</th><th></th></tr></thead><tbody>';
+      bookings.forEach(function (b) {
+        var services = Array.isArray(b.services_names) ? b.services_names.join(', ') : b.services_json;
+        var st = STATUS[b.status] || [b.status, 'badge-danger'];
+        var sel = '<option value="">—</option>' + wOpts.replace('value="' + esc(b.assigned_washer_id) + '"', 'value="' + esc(b.assigned_washer_id) + '" selected');
+        html += '<tr>' +
+          '<td><span class="mono" style="color:var(--accent);font-weight:700;">' + esc(b.booking_code) + '</span></td>' +
+          '<td><b>' + esc(b.name) + '</b></td>' +
+          '<td class="mono" style="font-size:.82rem;">' + esc(b.phone) + '</td>' +
+          '<td class="text-dim2">' + esc(b.car) + '</td>' +
+          '<td class="text-dim2">' + esc(b.class_name) + '</td>' +
+          '<td class="text-dim2" style="max-width:220px;font-size:.82rem;">' + esc(services) + '</td>' +
+          '<td class="mono">' + String(b.hour).padStart(2, '0') + ':00</td>' +
+          '<td class="num"><b>' + rub(b.total) + '</b></td>' +
+          '<td><span class="badge ' + st[1] + '">' + esc(st[0]) + '</span></td>' +
+          '<td><select class="input" style="min-width:150px;padding:6px 8px;font-size:.82rem;" data-washer="' + esc(b.id) + '">' + sel + '</select></td>' +
+          '<td style="white-space:nowrap;"><button class="btn btn-small btn-ghost" type="button" data-edit="' + esc(b.id) + '">Изменить</button> ' + ((b.status === 'confirmed' || b.status === 'in_progress') ? '<button class="btn btn-small btn-ok" type="button" data-done="' + esc(b.id) + '">✓ Готова</button>' : '') + '</td>' +
+          '</tr>';
+      });
+      list.innerHTML = html + '</tbody></table></div></div>';
+    }).catch(function (e) {
+      if (e.status === 401) return;
+      say(msg, 'err', 'Не удалось загрузить записи.'); list.innerHTML = '';
+    });
+  }
+  $('bookingsList').addEventListener('change', function (e) {
+    var sel = e.target.closest('select[data-washer]'); if (!sel) return;
+    send('PATCH', '/api/admin/bookings/' + encodeURIComponent(sel.getAttribute('data-washer')),
+      { assigned_washer_id: sel.value ? parseInt(sel.value, 10) : null }).catch(function (er) { alert(errText(er)); loadBookings(); });
+  });
+  $('bookingsList').addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-done]'); if (!btn) return;
+    if (!confirm('Отметить как готовую?')) return;
+    btn.disabled = true;
+    send('POST', '/api/admin/bookings/' + encodeURIComponent(btn.getAttribute('data-done')) + '/complete')
+      .then(loadBookings).catch(function (er) { alert(errText(er)); btn.disabled = false; });
+  });
+  $('bookingsList').addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-edit]'); if (!btn) return;
+    var b = lastBookings.filter(function (x) { return String(x.id) === btn.getAttribute('data-edit'); })[0];
+    if (b) nbEdit(b);
+  });
+  $('loadBtn').addEventListener('click', loadBookings);
+  $('exportBtn').addEventListener('click', function () {
+    var d = $('date').value;
+    fetch('/api/admin/export/bookings?date=' + encodeURIComponent(d), { headers: { 'Authorization': 'Bearer ' + token } })
+      .then(function (r) { if (!r.ok) throw new Error('http_' + r.status); return r.blob(); })
+      .then(function (blob) {
+        var url = URL.createObjectURL(blob), a = document.createElement('a');
+        a.href = url; a.download = 'bookings_' + d + '.csv'; a.click(); URL.revokeObjectURL(url);
+      }).catch(function () { say($('bookingsMsg'), 'err', 'Не удалось выгрузить CSV.'); });
+  });
+
+  /* ---------- отчёт ---------- */
+  function loadReport() {
+    var msg = $('reportMsg'); say(msg, '', '');
+    return api('/api/admin/reports/daily?date=' + encodeURIComponent($('reportDate').value)).then(function (res) {
+      var tb = document.querySelector('#reportTb tbody');
+      tb.innerHTML = (res.rows || []).map(function (r) {
+        return '<tr><td>' + esc(r.washer_name) + '</td><td class="num">' + esc(r.bookings_count) + '</td><td class="num">' + rub(r.total_sum) +
+          '</td><td class="num">' + rub(r.fines_sum) + '</td><td class="num"><b>' + rub(r.payout) + '</b></td></tr>';
+      }).join('');
+    }).catch(function (e) { if (e.status !== 401) say(msg, 'err', 'Не удалось загрузить отчёт.'); });
+  }
+  $('loadReportBtn').addEventListener('click', loadReport);
+
+  /* ---------- мойщики ---------- */
+  function loadWashers() {
+    var list = $('washersList');
+    list.innerHTML = '<div class="empty"><div class="empty-title">Загружаем…</div></div>';
+    say($('washersMsg'), '', '');
+    return api('/api/admin/washers').then(function (res) {
+      washers = res.washers || [];
+      $('fineWasher').innerHTML = washers.map(function (w) { return '<option value="' + esc(w.id) + '">' + esc(w.name) + '</option>'; }).join('');
+      if (!washers.length) {
+        list.innerHTML = '<div class="empty"><div class="empty-icon">👤</div><div class="empty-title">Пока нет мойщиков</div><div>Нажмите «+ Добавить».</div></div>';
+        return;
+      }
+      list.innerHTML = washers.map(function (w) {
+        return '<div class="washer-card"><div class="info"><div class="name">' + esc(w.name) + '</div><div class="sub">' + esc(w.phone || 'телефон не указан') +
+          '</div></div><div class="comm">' + Math.round((Number(w.commission) || 0) * 100) + '%</div><div class="actions">' +
+          '<button class="btn btn-small btn-ghost" type="button" data-pin="' + esc(w.id) + '">' + ((w.has_pin || w.pin_hash) ? 'Сменить PIN' : 'Задать PIN') + '</button>' +
+          '<button class="btn btn-small btn-danger" type="button" data-del-washer="' + esc(w.id) + '">Удалить</button></div></div>';
+      }).join('');
+    }).catch(function (e) {
+      if (e.status !== 401) list.innerHTML = '<div class="empty"><div class="empty-title">Не удалось загрузить</div></div>';
+    });
+  }
+  $('washersList').addEventListener('click', function (e) {
+    var p = e.target.closest('button[data-pin]');
+    if (p) {
+      var pin = prompt('Новый PIN для мойщика (4–6 цифр). Сообщите его сотруднику лично:');
+      if (pin === null) return;
+      if (!/^\d{4,6}$/.test(pin)) { say($('washersMsg'), 'err', ERR['pin must be 4-6 digits']); return; }
+      send('POST', '/api/admin/washers/' + encodeURIComponent(p.getAttribute('data-pin')) + '/pin', { pin: pin })
+        .then(function () { say($('washersMsg'), 'ok', '✓ PIN сохранён'); loadWashers(); })
+        .catch(function (er) { say($('washersMsg'), 'err', errText(er)); });
+      return;
+    }
+    var d = e.target.closest('button[data-del-washer]');
+    if (d) {
+      var w = washers.filter(function (x) { return String(x.id) === d.getAttribute('data-del-washer'); })[0];
+      if (!confirm('Удалить мойщика «' + (w ? w.name : '') + '»?')) return;
+      d.disabled = true;
+      send('DELETE', '/api/admin/washers/' + encodeURIComponent(d.getAttribute('data-del-washer')))
+        .then(loadWashers).catch(function (er) { alert(errText(er)); d.disabled = false; });
+    }
+  });
+  $('addWasherBtn').addEventListener('click', function () {
+    $('addWasherCard').style.display = '';
+    $('newWasherName').value = ''; $('newWasherPhone').value = ''; $('newWasherComm').value = '50';
+    say($('newWasherMsg'), '', '');
+  });
+  $('cancelWasherBtn').addEventListener('click', function () { $('addWasherCard').style.display = 'none'; });
+  $('saveWasherBtn').addEventListener('click', function () {
+    var name = $('newWasherName').value.trim(), phone = $('newWasherPhone').value.trim();
+    var comm = parseFloat($('newWasherComm').value) / 100, msg = $('newWasherMsg');
+    if (!name) { say(msg, 'err', 'Введите имя'); return; }
+    if (!(comm >= 0 && comm <= 1)) { say(msg, 'err', 'Комиссия: от 0 до 100%'); return; }
+    send('POST', '/api/admin/washers', { name: name, phone: phone, commission: comm }).then(function () {
+      $('addWasherCard').style.display = 'none';
+      say($('washersMsg'), 'ok', '✓ Мойщик добавлен. Теперь задайте ему PIN.');
+      return loadWashers();
+    }).catch(function (e) { say(msg, 'err', errText(e)); });
+  });
+  $('fineBtn').addEventListener('click', function () {
+    var id = parseInt($('fineWasher').value, 10), amount = parseInt($('fineAmount').value, 10), msg = $('fineMsg');
+    if (!id || !(amount > 0)) { say(msg, 'err', 'Укажите мойщика и сумму'); return; }
+    send('POST', '/api/admin/fines', { washer_id: id, amount: amount, reason: $('fineReason').value }).then(function () {
+      say(msg, 'ok', '✓ Штраф добавлен'); $('fineAmount').value = ''; $('fineReason').value = '';
+    }).catch(function (e) { say(msg, 'err', errText(e)); });
+  });
+
+  /* ---------- справочники: классы и услуги ---------- */
+  var refClasses = [], refServices = [];
+  function loadRef() {
+    return Promise.all([api('/api/admin/classes'), api('/api/admin/services')]).then(function (r) {
+      refClasses = r[0].classes || []; refServices = r[1].services || [];
+    });
+  }
+  var COEF = [0.9, 1.3, 1, 1.2, 1.45, 1.8, 0.8]; // мото, квадро, легковой, кроссовер, внедорожник, минивэн, прицеп
+  function coefFor(i) { return refClasses.length === 7 ? COEF[i] : 1; }
+  function baseIndex() { return refClasses.length === 7 ? 2 : 0; }
+  function roundPrice(v) { return Math.max(0, Math.round(v / 10) * 10); }
+  function showTabOnly(name) {
+    document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === name); });
+    ['bookings', 'new', 'report', 'washers', 'services'].forEach(function (n) { $('panel-' + n).style.display = (n === name) ? '' : 'none'; });
+  }
+
+  /* ---------- услуги ---------- */
+  // [название, минут, цена для «Легковой», классы (индексы), если не для всех]
+  var EXTRA_SET = [
+    ['Пылесос салона', 20, 300, [2, 3, 4, 5]], ['Мойка ковриков', 10, 150, [2, 3, 4, 5]], ['Мойка днища', 20, 400, [2, 3, 4, 5, 6]],
+    ['Обезжиривание кузова', 20, 300], ['Чернение пластика', 20, 300, [2, 3, 4, 5]], ['Антидождь на стёкла', 20, 500, [2, 3, 4, 5]],
+    ['Полировка фар', 60, 1500, [2, 3, 4, 5]], ['Мойка дисков', 15, 250, [2, 3, 4, 5]], ['Уборка шерсти животных', 30, 500, [2, 3, 4, 5]],
+    ['Удаление битумных пятен', 30, 600], ['Мойка багажника', 15, 200, [2, 3, 4, 5]], ['Уход за кожей салона', 45, 1200, [2, 3, 4, 5]],
+    ['Озонация салона', 30, 800, [2, 3, 4, 5]], ['Воск для кузова', 40, 1200], ['Жидкое стекло (кузов)', 90, 3000, [2, 3, 4, 5]],
+    ['Мойка двигателя паром', 30, 700, [2, 3, 4, 5]], ['Комплексная уборка салона', 60, 1200, [2, 3, 4, 5]]
+  ];
+  function svcClassId() { return $('svcClass').value ? parseInt($('svcClass').value, 10) : null; }
+  function svcRender() {
+    var cid = svcClassId(), box = $('svcList');
+    if (!cid) { box.innerHTML = '<div class="empty"><div class="empty-title">Выберите класс выше</div></div>'; return; }
+    var hidden = $('svcShowHidden').checked;
+    var rows = refServices.filter(function (sv) { return sv.vehicle_class === cid && (hidden || sv.active !== 0); });
+    if (!rows.length) { box.innerHTML = '<div class="empty"><div class="empty-title">В этом классе пока нет услуг</div><div>Добавьте ниже.</div></div>'; return; }
+    box.innerHTML = '<div class="card">' + rows.map(function (sv) {
+      var off = sv.active === 0;
+      return '<div class="svc-line" data-id="' + esc(sv.id) + '" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line);' + (off ? 'opacity:.55;' : '') + '">' +
+        '<input class="input" data-f="name" value="' + esc(sv.name) + '" style="flex:1;min-width:200px;" aria-label="Название">' +
+        '<input class="input" data-f="price" type="number" min="0" value="' + esc(sv.price) + '" style="width:110px;" aria-label="Цена"><span class="text-dim2">₽</span>' +
+        '<input class="input" data-f="duration" type="number" min="1" value="' + esc(sv.duration) + '" style="width:90px;" aria-label="Минут"><span class="text-dim2">мин</span>' +
+        '<button class="btn btn-small" type="button" data-save="' + esc(sv.id) + '">Сохранить</button>' +
+        '<button class="btn btn-small btn-ghost" type="button" data-toggle="' + esc(sv.id) + '">' + (off ? 'Вернуть' : 'Скрыть') + '</button></div>';
+    }).join('') + '</div>';
+  }
+  function svcRecalc() {
+    var b = parseFloat($('svcBase').value);
+    document.querySelectorAll('#svcAddTb [data-coef]').forEach(function (inp) {
+      var pr = document.querySelector('#svcAddTb [data-price="' + inp.getAttribute('data-coef') + '"]');
+      pr.value = (b >= 0) ? roundPrice(b * (parseFloat(inp.value) || 0)) : '';
+    });
+  }
+  function renderAddTable() {
+    var base = refClasses[baseIndex()];
+    $('svcBaseLbl').textContent = 'Базовая цена, ₽ (для класса «' + (base ? base.name : '') + '»)';
+    $('svcAddTb').innerHTML = refClasses.map(function (c, i) {
+      return '<tr><td>' + esc(c.name) + '</td><td><input type="number" step="0.05" min="0" data-coef="' + esc(c.id) + '" value="' + coefFor(i) + '" style="width:90px;"></td>' +
+        '<td><input type="number" min="0" data-price="' + esc(c.id) + '" style="width:120px;"></td><td><input type="checkbox" data-inc="' + esc(c.id) + '" checked style="width:auto;"></td></tr>';
+    }).join('');
+    svcRecalc();
+  }
+  function loadServices() {
+    say($('servicesMsg'), '', '');
+    return loadRef().then(function () {
+      var cur = $('svcClass').value;
+      $('svcClass').innerHTML = refClasses.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>'; }).join('');
+      var def = refClasses[baseIndex()] || refClasses[0];
+      $('svcClass').value = cur || (def ? String(def.id) : '');
+      renderAddTable(); svcRender();
+    }).catch(function (e) { if (e.status !== 401) say($('servicesMsg'), 'err', 'Не удалось загрузить услуги.'); });
+  }
+  $('svcClass').addEventListener('change', svcRender);
+  $('svcShowHidden').addEventListener('change', svcRender);
+  $('svcBase').addEventListener('input', svcRecalc);
+  $('svcAddTb').addEventListener('input', function (e) { if (e.target.hasAttribute('data-coef')) svcRecalc(); });
+  $('svcList').addEventListener('click', function (e) {
+    var msg = $('servicesMsg');
+    var sv = e.target.closest('button[data-save]');
+    if (sv) {
+      var id = sv.getAttribute('data-save'), line = sv.closest('.svc-line');
+      var f = function (k) { return line.querySelector('[data-f="' + k + '"]').value.trim(); };
+      var name = f('name'), price = parseInt(f('price'), 10), dur = parseInt(f('duration'), 10);
+      if (!name || !(price >= 0) || !(dur > 0)) { say(msg, 'err', 'Проверьте название, цену и длительность.'); return; }
+      sv.disabled = true;
+      send('PATCH', '/api/admin/services/' + encodeURIComponent(id), { name: name, price: price, duration: dur }).then(function () {
+        say(msg, 'ok', '✓ Сохранено: ' + name);
+        refServices.forEach(function (x) { if (String(x.id) === id) { x.name = name; x.price = price; x.duration = dur; } });
+        sv.textContent = '✓'; setTimeout(function () { sv.textContent = 'Сохранить'; sv.disabled = false; }, 1000);
+      }).catch(function (er) { say(msg, 'err', errText(er)); sv.disabled = false; });
+      return;
+    }
+    var tg = e.target.closest('button[data-toggle]');
+    if (tg) {
+      var tid = tg.getAttribute('data-toggle'), cur = refServices.filter(function (x) { return String(x.id) === tid; })[0];
+      tg.disabled = true;
+      send('POST', '/api/admin/services/' + encodeURIComponent(tid) + '/active', { active: cur && cur.active === 0 }).then(function () {
+        if (cur) cur.active = (cur.active === 0) ? 1 : 0;
+        say(msg, 'ok', cur && cur.active === 0 ? 'Услуга скрыта с сайта клиентов.' : 'Услуга снова доступна клиентам.'); svcRender();
+      }).catch(function (er) { say(msg, 'err', errText(er)); tg.disabled = false; });
+    }
+  });
+  $('svcAddBtn').addEventListener('click', function () {
+    var msg = $('servicesMsg'), name = $('svcName').value.trim(), dur = parseInt($('svcDur').value, 10), prices = {};
+    document.querySelectorAll('#svcAddTb [data-inc]').forEach(function (cb) {
+      var cid = cb.getAttribute('data-inc'), pv = parseInt(document.querySelector('#svcAddTb [data-price="' + cid + '"]').value, 10);
+      if (cb.checked && pv >= 0) prices[cid] = pv;
+    });
+    if (!name) { say(msg, 'err', 'Введите название услуги.'); return; }
+    if (!(dur > 0)) { say(msg, 'err', 'Укажите длительность в минутах.'); return; }
+    if (!Object.keys(prices).length) { say(msg, 'err', 'Введите базовую цену или заполните цены классов.'); return; }
+    $('svcAddBtn').disabled = true;
+    send('POST', '/api/admin/services', { items: [{ name: name, duration: dur, prices: prices }] }).then(function (r) {
+      say(msg, 'ok', '✓ Добавлено позиций: ' + r.created + (r.skipped ? ', уже были: ' + r.skipped : ''));
+      $('svcName').value = ''; $('svcBase').value = ''; return loadServices();
+    }).catch(function (er) { say(msg, 'err', errText(er)); }).then(function () { $('svcAddBtn').disabled = false; });
+  });
+  $('svcPresetBtn').addEventListener('click', function () {
+    var msg = $('servicesMsg'), k = parseFloat($('svcPresetK').value);
+    if (!(k > 0)) { say(msg, 'err', 'Множитель должен быть больше нуля.'); return; }
+    var items = EXTRA_SET.map(function (x) {
+      var prices = {};
+      refClasses.forEach(function (c, i) {
+        if (refClasses.length === 7 && x[3] && x[3].indexOf(i) === -1) return;
+        prices[c.id] = roundPrice(x[2] * k * coefFor(i));
+      });
+      return { name: x[0], duration: x[1], prices: prices };
+    });
+    if (!confirm('Добавить ' + items.length + ' типовых услуг? Цены потом можно поправить.')) return;
+    $('svcPresetBtn').disabled = true;
+    send('POST', '/api/admin/services', { items: items }).then(function (r) {
+      say(msg, 'ok', '✓ Добавлено позиций: ' + r.created + (r.skipped ? ', уже были: ' + r.skipped : '')); return loadServices();
+    }).catch(function (er) { say(msg, 'err', errText(er)); }).then(function () { $('svcPresetBtn').disabled = false; });
+  });
+
+  /* ---------- новая запись / редактирование ---------- */
+  var nbPicked = {}, nbExtras = [], nbLocked = false, nbEditId = null;
+  function nbClassId() { return $('nbClass').value ? parseInt($('nbClass').value, 10) : null; }
+  function nbSum() {
+    var sum = 0, cid = nbClassId();
+    refServices.forEach(function (sv) { if (nbPicked[sv.id] && sv.vehicle_class === cid) sum += sv.price; });
+    nbExtras.forEach(function (x) { sum += x.price; });
+    return sum;
+  }
+  function nbTotalShow() {
+    var ov = $('nbTotalOverride').value.trim();
+    $('nbTotal').textContent = 'Итого: ' + rub(ov !== '' ? parseInt(ov, 10) || 0 : nbSum());
+  }
+  function nbRenderServices() {
+    var cid = nbClassId(), box = $('nbServices');
+    if (!cid) { box.textContent = 'Сначала выберите класс'; nbTotalShow(); return; }
+    var list = refServices.filter(function (sv) { return sv.vehicle_class === cid && (sv.active !== 0 || nbPicked[sv.id]); });
+    box.innerHTML = list.length ? list.map(function (sv) {
+      return '<label style="display:flex;gap:10px;align-items:center;margin:6px 0;color:var(--fg);"><input type="checkbox" style="width:auto;" data-svc="' + esc(sv.id) + '"' + (nbPicked[sv.id] ? ' checked' : '') + '> <span style="flex:1;">' + esc(sv.name) + (sv.active === 0 ? ' (скрыта)' : '') + '</span><b class="mono">' + rub(sv.price) + '</b></label>';
+    }).join('') : 'Для этого класса нет услуг. Можно добавить свою ниже.';
+    nbTotalShow();
+  }
+  function nbRenderExtras() {
+    $('nbExList').innerHTML = nbExtras.map(function (x, i) {
+      return '<div style="display:flex;gap:10px;align-items:center;margin:4px 0;"><span style="flex:1;">' + esc(x.name) + '</span><b class="mono">' + rub(x.price) + '</b><button class="btn btn-small btn-danger" type="button" data-exdel="' + i + '" style="width:auto;">✕</button></div>';
+    }).join('');
+    nbTotalShow();
+  }
+  function nbSetClass(id, note) {
+    if (id !== nbClassId()) nbPicked = {};
+    $('nbClass').value = id === null ? '' : String(id);
+    $('nbClassTag').textContent = note || '';
+    nbRenderServices();
+  }
+  function nbLoad() {
+    say($('nbMsg'), '', '');
+    return loadRef().then(function () {
+      var cur = $('nbClass').value;
+      $('nbClass').innerHTML = '<option value="">— выберите —</option>' + refClasses.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>'; }).join('');
+      if (cur) $('nbClass').value = cur;
+      if (!$('nbDate').value) $('nbDate').value = todayIso();
+      if (!$('nbHour').options.length) {
+        var h = '';
+        for (var i = 0; i < 24; i++) h += '<option value="' + i + '">' + String(i).padStart(2, '0') + ':00</option>';
+        $('nbHour').innerHTML = h; $('nbHour').value = String(Math.min(23, new Date().getHours() + 1));
+      }
+      var w = $('nbWasher').value;
+      $('nbWasher').innerHTML = '<option value="">— без мойщика —</option>' + washers.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.name) + '</option>'; }).join('');
+      $('nbWasher').value = w;
+      nbRenderServices(); nbRenderExtras();
+    }).catch(function (e) { if (e.status !== 401) say($('nbMsg'), 'err', 'Не удалось загрузить услуги.'); });
+  }
+  function nbReset() {
+    ['nbName', 'nbPhone', 'nbCar', 'nbTotalOverride', 'nbExName', 'nbExPrice'].forEach(function (id) { $(id).value = ''; });
+    nbPicked = {}; nbExtras = []; nbLocked = false; nbEditId = null; $('nbForce').checked = false; $('nbWasher').value = '';
+    $('nbEditBar').style.display = 'none'; $('nbTitle').textContent = 'Записать клиента вручную'; $('nbSubmit').textContent = 'Записать';
+    nbSetClass(null, ''); nbRenderExtras();
+  }
+  function nbEdit(b) {
+    showTabOnly('new');
+    nbLoad().then(function () {
+      nbReset(); nbEditId = b.id; nbLocked = true;
+      $('nbName').value = b.name || ''; $('nbPhone').value = b.phone || ''; $('nbCar').value = b.car || '';
+      $('nbClass').value = String(b.vehicle_class_id);
+      try { JSON.parse(b.services_json).forEach(function (id) { nbPicked[id] = true; }); } catch (e) {}
+      nbExtras = (b.extras || []).map(function (x) { return { name: x.name, price: x.price }; });
+      $('nbDate').value = b.date; $('nbHour').value = String(b.hour);
+      $('nbWasher').value = b.assigned_washer_id ? String(b.assigned_washer_id) : '';
+      $('nbStatus').value = b.status;
+      nbRenderServices(); nbRenderExtras();
+      $('nbTotalOverride').value = (nbSum() !== b.total) ? String(b.total) : '';
+      nbTotalShow();
+      $('nbEditBar').style.display = ''; $('nbEditTitle').textContent = 'Редактирование записи № ' + b.booking_code;
+      $('nbTitle').textContent = 'Изменить запись'; $('nbSubmit').textContent = 'Сохранить изменения';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+  $('nbCar').addEventListener('input', function () {
+    var t = $('nbCar').value.trim();
+    if (!t) { nbLocked = false; if (!nbEditId) nbSetClass(null, ''); return; }
+    if (nbLocked || !window.RLCars || refClasses.length !== 7) return;
+    var r = window.RLCars.detect(t);
+    if (r && r.cls !== null && r.cls !== undefined && refClasses[r.cls]) nbSetClass(refClasses[r.cls].id, '✓ Класс определён автоматически: ' + refClasses[r.cls].name);
+    else nbSetClass(null, 'Модели нет в базе: выберите класс из списка вручную.');
+  });
+  $('nbClass').addEventListener('change', function () {
+    nbLocked = !!$('nbClass').value;
+    nbSetClass(nbClassId(), nbLocked ? 'Класс выбран вручную.' : '');
+  });
+  $('nbServices').addEventListener('change', function (e) {
+    var cb = e.target.closest('input[data-svc]'); if (!cb) return;
+    nbPicked[cb.getAttribute('data-svc')] = cb.checked; nbTotalShow();
+  });
+  $('nbTotalOverride').addEventListener('input', nbTotalShow);
+  $('nbExAdd').addEventListener('click', function () {
+    var nm = $('nbExName').value.trim(), pr = parseInt($('nbExPrice').value, 10);
+    if (!nm || !(pr >= 0)) { say($('nbMsg'), 'err', 'Для своей услуги укажите название и цену.'); return; }
+    if (nbExtras.length >= 10) { say($('nbMsg'), 'err', 'Не больше 10 своих услуг в одной записи.'); return; }
+    nbExtras.push({ name: nm, price: pr }); $('nbExName').value = ''; $('nbExPrice').value = ''; say($('nbMsg'), '', ''); nbRenderExtras();
+  });
+  $('nbExList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-exdel]'); if (!b) return;
+    nbExtras.splice(parseInt(b.getAttribute('data-exdel'), 10), 1); nbRenderExtras();
+  });
+  $('nbCancelEdit').addEventListener('click', function () { nbReset(); showTabOnly('bookings'); loadBookings(); });
+  $('nbSubmit').addEventListener('click', function () {
+    var msg = $('nbMsg'), btn = $('nbSubmit');
+    var ids = refServices.filter(function (sv) { return nbPicked[sv.id] && sv.vehicle_class === nbClassId(); }).map(function (sv) { return sv.id; });
+    if (!$('nbName').value.trim()) { say(msg, 'err', 'Укажите имя клиента.'); return; }
+    if (!nbClassId()) { say(msg, 'err', 'Выберите класс.'); return; }
+    if (!ids.length && !nbExtras.length) { say(msg, 'err', 'Отметьте услугу из каталога или добавьте свою.'); return; }
+    if (!$('nbDate').value) { say(msg, 'err', 'Укажите дату.'); return; }
+    var body = {
+      name: $('nbName').value.trim(), phone: $('nbPhone').value.trim(), car: $('nbCar').value.trim(),
+      vehicle_class_id: nbClassId(), service_ids: ids, extras: nbExtras, date: $('nbDate').value, hour: parseInt($('nbHour').value, 10),
+      assigned_washer_id: $('nbWasher').value ? parseInt($('nbWasher').value, 10) : null, force: $('nbForce').checked
+    };
+    var ov = $('nbTotalOverride').value.trim(); if (ov !== '') body.total = parseInt(ov, 10);
+    var editing = nbEditId;
+    if (editing) body.status = $('nbStatus').value;
+    btn.disabled = true; say(msg, '', 'Сохраняем…');
+    (editing ? send('PUT', '/api/admin/bookings/' + encodeURIComponent(editing), body) : send('POST', '/api/admin/bookings', body)).then(function (res) {
+      var date = body.date;
+      if (editing) { nbReset(); say($('bookingsMsg'), 'ok', '✓ Изменения сохранены'); showTabOnly('bookings'); $('date').value = date; loadBookings(); loadReport(); }
+      else { say(msg, 'ok', '✓ Запись № ' + res.booking.booking_code + ' создана'); nbReset(); if ($('date').value === date) loadBookings(); }
+    }).catch(function (e) { say(msg, 'err', errText(e)); }).then(function () { btn.disabled = false; });
+  });
+
+  /* ---------- восстановление сессии ---------- */
+  var saved = store.get('admin_token');
+  if (saved) {
+    token = saved;
+    api('/api/admin/bookings?date=' + todayIso()).then(showMain).catch(function () { token = ''; store.del('admin_token'); });
+  }
+})();
+</script>
+<script src="/theme.js"></script>
+</body>
+</html>

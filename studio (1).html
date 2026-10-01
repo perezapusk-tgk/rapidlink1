@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RapidLink — Панель студии</title>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/styles-fix.css">
+</head>
+<body>
+<div class="container">
+
+  <div id="loginView" style="max-width:480px;margin:60px auto 0;">
+    <h1>Rapid<span style="color:var(--accent);">Link</span></h1>
+    <p style="color:var(--fg-dim);margin:6px 0 24px;font-size:0.9rem;">Панель управления студии</p>
+    <div class="card">
+      <div class="field">
+        <label for="licenseKey">Лицензионный ключ</label>
+        <input id="licenseKey" class="input" placeholder="RPLK-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      </div>
+      <button class="btn btn-block" id="loginBtn" type="button">Войти</button>
+      <div class="msg" id="loginMsg" role="alert"></div>
+    </div>
+    <p style="text-align:center;margin-top:16px;color:var(--fg-dim2);font-size:0.78rem;">Ключ выдаётся после покупки тарифа.</p>
+  </div>
+
+  <div id="mainView" style="display:none;">
+    <div id="welcomeCard" class="card" style="display:none;margin-bottom:18px;background:linear-gradient(135deg,var(--accent-dim),var(--ok-dim));border-color:var(--accent-strong);">
+      <h2 style="margin-top:0;color:var(--fg);">Добро пожаловать в RapidLink</h2>
+      <p style="color:var(--fg-dim);font-size:0.94rem;margin-bottom:16px;">Мы создали для вас демо-клиента: откройте его сайт и админку и посмотрите, как работает движок.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px;">
+        <a href="#" id="welcomeClientLink" target="_blank" rel="noopener" class="card" style="text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:12px;padding:14px;">
+          <span style="font-size:1.6rem;">🌐</span>
+          <span><span style="display:block;font-size:0.72rem;color:var(--fg-dim2);">Клиентский сайт</span><span style="font-size:0.92rem;font-weight:700;">Запись на мойку</span></span>
+        </a>
+        <a href="#" id="welcomeAdminLink" target="_blank" rel="noopener" class="card" style="text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:12px;padding:14px;">
+          <span style="font-size:1.6rem;">🔐</span>
+          <span><span style="display:block;font-size:0.72rem;color:var(--fg-dim2);">Админка</span><span style="font-size:0.92rem;font-weight:700;">Управление</span></span>
+        </a>
+      </div>
+      <div style="font-size:0.82rem;color:var(--fg-dim2);margin-bottom:12px;">
+        <b style="color:var(--fg);">Демо-логин:</b>
+        <span id="welcomeDemoLogin" class="mono" style="color:var(--accent);">—</span> /
+        <span id="welcomeDemoPass" class="mono" style="color:var(--accent);">—</span>
+      </div>
+      <button class="btn btn-small btn-ghost" id="welcomeCloseBtn" type="button">Понятно, скрыть</button>
+    </div>
+
+    <div class="page-head">
+      <div>
+        <h1 id="studioName">—</h1>
+        <div class="sub" style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+          <span id="studioTier" class="badge badge-start">—</span>
+          <span id="studioLimits">—</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-small" id="logoutBtn" type="button">Выйти</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-icon">👥</div><div class="lbl">Клиентов</div><div class="val accent" id="statTenants">0</div></div>
+      <div class="stat"><div class="stat-icon">💰</div><div class="lbl">Оборот клиентов</div><div class="val" id="statRevenue">—</div></div>
+      <div class="stat stat-ok"><div class="stat-icon">📊</div><div class="lbl" id="statCommissionLbl">Комиссия</div><div class="val ok" id="statCommission">—</div></div>
+    </div>
+
+    <div class="flex-between mb-2" style="flex-wrap:wrap;gap:10px;">
+      <h3 style="margin:0;">Мои клиенты</h3>
+      <button class="btn" id="addTenantBtn" type="button">+ Добавить клиента</button>
+    </div>
+
+    <div id="tenantsWrap">
+      <div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Загружаем…</div></div>
+    </div>
+
+    <div class="msg" id="mainMsg" role="alert"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="addModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+    <h2 id="addTitle" style="margin-bottom:18px;">Новый клиент</h2>
+    <div id="formBlock">
+      <div class="field">
+        <label for="newSubdomain">Поддомен</label>
+        <input id="newSubdomain" class="input" placeholder="mywash" autocapitalize="off" autocomplete="off" spellcheck="false">
+        <div style="font-family:monospace;font-size:0.8rem;color:var(--fg-dim2);margin-top:6px;" id="subdomainPreview"></div>
+      </div>
+      <div class="field">
+        <label for="newVertical">Вертикаль</label>
+        <select id="newVertical" class="input"></select>
+      </div>
+      <div class="field">
+        <label for="newBusinessName">Название бизнеса</label>
+        <input id="newBusinessName" class="input" placeholder="Мойка на Ленина" maxlength="100">
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label for="newContactName">Контакт</label>
+          <input id="newContactName" class="input" placeholder="Иван Иванов" maxlength="100">
+        </div>
+        <div class="field">
+          <label for="newContactPhone">Телефон</label>
+          <input id="newContactPhone" class="input" placeholder="+7 ..." type="tel" maxlength="30">
+        </div>
+      </div>
+      <div class="msg" id="addMsg" role="alert"></div>
+      <div class="row row-narrow mt-2">
+        <button class="btn btn-ghost" id="cancelAddBtn" type="button">Отмена</button>
+        <button class="btn" id="createTenantBtn" type="button">Создать клиента</button>
+      </div>
+    </div>
+    <div id="createdResult" style="display:none;">
+      <div style="background:var(--ok-dim);border:1px solid var(--ok);border-radius:10px;padding:16px;margin:14px 0;">
+        <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Сайт клиента</div>
+        <div style="font-family:monospace;font-size:0.92rem;color:var(--fg);margin-bottom:12px;word-break:break-all;" id="resultUrl">—</div>
+        <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Логин админки</div>
+        <div style="font-family:monospace;font-size:0.92rem;color:var(--fg);margin-bottom:12px;" id="resultLogin">—</div>
+        <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Пароль админки</div>
+        <div style="font-family:monospace;font-size:0.92rem;color:var(--fg);margin-bottom:12px;" id="resultPassword">—</div>
+        <div style="font-size:0.78rem;color:var(--fg-dim2);">Сохраните сейчас: пароль показывается один раз.</div>
+      </div>
+      <button class="btn btn-block" id="closeResultBtn" type="button">Готово</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // Базовый домен для клиентов. На нём клиенты открываются по поддомену (mywash.rapidlink.ru).
+  // На любом другом хосте (например *.onrender.com) используется ссылка вида /?tenant=mywash.
+  var BASE_DOMAIN = 'rapidlink.ru';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var token = '', studio = null, verticals = [];
+
+  // localStorage может быть недоступен (приватный режим): не даём этому ломать вход
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+
+  var ERR = {
+    invalid_license: 'Неверный ключ. Проверьте.',
+    revoked: 'Ключ отозван. Обратитесь к поставщику.',
+    platform_not_ready: 'Сервер ещё запускается. Подождите минуту и повторите.',
+    too_many_requests: 'Слишком много попыток. Подождите 10 минут.',
+    subdomain_taken: 'Поддомен уже занят.',
+    subdomain_reserved: 'Этот поддомен зарезервирован. Выберите другой.',
+    invalid_subdomain: 'Поддомен: 3–32 символа, латиница, цифры, дефис.',
+    tenant_limit_reached: 'Достигнут лимит клиентов по вашему тарифу.',
+    studio_suspended: 'Студия приостановлена. Обратитесь к поставщику.',
+    unknown_vertical: 'Неизвестная вертикаль.',
+    vertical_required: 'Выберите вертикаль.',
+    business_name_required: 'Укажите название бизнеса.'
+  };
+  function errText(e) { return ERR[(e.data && e.data.error) || e.message] || ('Ошибка: ' + (e.message || 'неизвестно')); }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function rub(n) { return (Number(n) || 0).toLocaleString('ru-RU') + ' ₽'; }
+  function say(el, cls, text) { el.className = 'msg' + (cls ? ' ' + cls : ''); el.textContent = text; }
+
+  function useSubdomains() { var h = location.hostname; return h === BASE_DOMAIN || h.slice(-(BASE_DOMAIN.length + 1)) === '.' + BASE_DOMAIN; }
+  function urlsFor(sub) {
+    if (useSubdomains()) { var o = 'https://' + sub + '.' + BASE_DOMAIN; return { site: o + '/', admin: o + '/admin.html' }; }
+    var q = '?tenant=' + encodeURIComponent(sub);
+    return { site: location.origin + '/' + q, admin: location.origin + '/admin.html' + q };
+  }
+
+  function api(path, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    return fetch(path, opts).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        if (!res.ok) {
+          var err = new Error((data && data.error) || ('http_' + res.status));
+          err.status = res.status; err.data = data;
+          if (res.status === 401 && token) logout();
+          throw err;
+        }
+        return data;
+      });
+    });
+  }
+  function post(path, body) {
+    return api(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  }
+
+  function logout() {
+    token = ''; studio = null;
+    store.del('studio_token'); store.del('studio_data');
+    $('mainView').style.display = 'none';
+    $('loginView').style.display = '';
+    $('licenseKey').value = '';
+  }
+
+  /* ---------- вход ---------- */
+  function doLogin() {
+    var key = $('licenseKey').value.trim().toUpperCase();
+    var msg = $('loginMsg'), btn = $('loginBtn');
+    if (!key) { say(msg, 'err', 'Введите ключ'); return; }
+    btn.disabled = true; say(msg, '', 'Проверяем…');
+    post('/api/studio/login', { license_key: key }).then(function (res) {
+      token = res.token; studio = res.studio;
+      store.set('studio_token', token);
+      store.set('studio_data', JSON.stringify(studio));
+      if (res.is_new) store.del('studio_welcome_' + studio.id);
+      if (res.demo_login) store.set('studio_demo_login_' + studio.id, res.demo_login);
+      if (res.demo_password) store.set('studio_demo_pass_' + studio.id, res.demo_password);
+      say(msg, '', '');
+      return showMain();
+    }).catch(function (e) {
+      say(msg, 'err', errText(e));
+    }).then(function () { btn.disabled = false; });
+  }
+  $('loginBtn').addEventListener('click', doLogin);
+  $('licenseKey').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+  $('logoutBtn').addEventListener('click', logout);
+
+  /* ---------- главный экран ---------- */
+  function showMain() {
+    $('loginView').style.display = 'none';
+    $('mainView').style.display = '';
+    $('studioName').textContent = studio.name || ('Студия #' + studio.id);
+    var tierNames = { start: 'Start', business: 'Business', enterprise: 'Premium' };
+    var tierEl = $('studioTier');
+    tierEl.textContent = tierNames[studio.tier] || studio.tier;
+    tierEl.className = 'badge badge-' + studio.tier;
+    var maxT = studio.max_tenants > 0 ? studio.max_tenants : '∞';
+    var maxV = studio.max_verticals > 0 ? studio.max_verticals : '∞';
+    $('studioLimits').textContent = 'до ' + maxT + ' клиентов · ' + maxV + ' вертикалей';
+    var pct = studio.commission_percent != null ? studio.commission_percent : 3;
+    $('statCommissionLbl').textContent = 'Комиссия ' + pct + '%';
+    return Promise.all([loadVerticals(), loadTenants(), loadStats()]);
+  }
+
+  function loadVerticals() {
+    return api('/api/studio/verticals').then(function (res) {
+      verticals = res.verticals || [];
+      $('newVertical').innerHTML = verticals.map(function (v) {
+        return '<option value="' + esc(v.code) + '">' + esc((v.client_icon || '') + ' ' + v.name) + '</option>';
+      }).join('');
+    }).catch(function () {});
+  }
+
+  function loadStats() {
+    return api('/api/studio/stats').then(function (s) {
+      $('statRevenue').textContent = rub(s.revenue_total);
+      $('statCommission').textContent = rub(s.commission_total);
+      var l = $('statCommissionLbl');
+      l.textContent = 'Комиссия ' + s.commission_percent + '% · за месяц ' + rub(s.commission_month);
+    }).catch(function () {
+      $('statRevenue').textContent = '—'; $('statCommission').textContent = '—';
+    });
+  }
+
+  function loadTenants() {
+    var wrap = $('tenantsWrap');
+    say($('mainMsg'), '', '');
+    wrap.innerHTML = '<div class="empty"><div class="empty-title">Загружаем…</div></div>';
+    return api('/api/studio/tenants').then(function (res) {
+      var all = res.tenants || [];
+      var list = all.filter(function (t) { return t.status === 'active'; });
+      $('statTenants').textContent = list.length;
+      renderWelcome(all);
+      if (!list.length) {
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Пока нет клиентов</div><div>Нажмите «+ Добавить клиента»</div></div>';
+        return;
+      }
+      wrap.innerHTML = '';
+      list.forEach(function (t) {
+        var isDemo = String(t.subdomain).indexOf('demo-') === 0;
+        var u = urlsFor(t.subdomain);
+        var div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML =
+          '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;">' +
+            '<div style="flex:1;min-width:220px;">' +
+              '<div style="font-weight:700;font-size:1rem;margin-bottom:4px;">' + esc(t.business_name) +
+                ' <span class="badge badge-accent">' + esc(t.vertical_code) + '</span>' +
+                (isDemo ? ' <span class="badge badge-warn">ДЕМО</span>' : '') + '</div>' +
+              '<div style="font-size:0.82rem;color:var(--fg-dim);">' + esc((t.contact_name ? t.contact_name + ' · ' : '') + (t.contact_phone || '')) + '</div>' +
+              '<div style="font-family:monospace;font-size:0.78rem;color:var(--accent);margin-top:6px;word-break:break-all;">' + esc(u.site) + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;">' +
+              '<button class="btn btn-small btn-ghost" type="button" data-copy="' + esc(u.site) + '">Сайт</button>' +
+              '<button class="btn btn-small btn-ghost" type="button" data-copy="' + esc(u.admin) + '">Админка</button>' +
+              '<button class="btn btn-small btn-danger" type="button" data-archive="' + esc(t.id) + '">В архив</button>' +
+            '</div>' +
+          '</div>';
+        wrap.appendChild(div);
+      });
+    }).catch(function (e) {
+      if (e.status === 401) return;
+      wrap.innerHTML = '<div class="empty"><div class="empty-title">Не удалось загрузить: ' + esc(errText(e)) + '</div></div>';
+    });
+  }
+
+  // Делегирование кликов по списку клиентов
+  $('tenantsWrap').addEventListener('click', function (e) {
+    var c = e.target.closest('button[data-copy]');
+    if (c) {
+      var label = c.textContent, val = c.getAttribute('data-copy');
+      (navigator.clipboard ? navigator.clipboard.writeText(val) : Promise.reject()).then(function () {
+        c.textContent = '✓ Скопировано'; setTimeout(function () { c.textContent = label; }, 1200);
+      }).catch(function () { window.prompt('Скопируйте ссылку:', val); });
+      return;
+    }
+    var a = e.target.closest('button[data-archive]');
+    if (a) {
+      if (!confirm('Отправить клиента в архив? Его сайт перестанет работать.')) return;
+      a.disabled = true;
+      api('/api/studio/tenants/' + encodeURIComponent(a.getAttribute('data-archive')), { method: 'DELETE' })
+        .then(function () { return Promise.all([loadTenants(), loadStats()]); })
+        .catch(function (er) { alert(errText(er)); a.disabled = false; });
+    }
+  });
+
+  /* ---------- приветствие с демо ---------- */
+  function renderWelcome(all) {
+    if (store.get('studio_welcome_' + studio.id)) return;
+    var demo = all.filter(function (t) { return String(t.subdomain).indexOf('demo-') === 0; })[0];
+    if (!demo) return;
+    var u = urlsFor(demo.subdomain);
+    $('welcomeClientLink').href = u.site;
+    $('welcomeAdminLink').href = u.admin;
+    $('welcomeDemoLogin').textContent = store.get('studio_demo_login_' + studio.id) || 'demo_' + studio.id;
+    $('welcomeDemoPass').textContent = store.get('studio_demo_pass_' + studio.id) || 'показан при первом входе';
+    $('welcomeCard').style.display = '';
+  }
+  $('welcomeCloseBtn').addEventListener('click', function () {
+    $('welcomeCard').style.display = 'none';
+    if (studio) store.set('studio_welcome_' + studio.id, '1');
+  });
+
+  /* ---------- добавление клиента ---------- */
+  function cleanSub(v) { return v.trim().toLowerCase().replace(/[^a-z0-9-]/g, ''); }
+  function updatePreview() {
+    var v = cleanSub($('newSubdomain').value) || 'mywash';
+    $('subdomainPreview').textContent = '→ ' + urlsFor(v).site.replace(/^https?:\/\//, '');
+  }
+  function openModal() { $('addModal').classList.add('show'); }
+  function closeModal() { $('addModal').classList.remove('show'); }
+
+  $('addTenantBtn').addEventListener('click', function () {
+    $('formBlock').style.display = ''; $('createdResult').style.display = 'none';
+    say($('addMsg'), '', '');
+    ['newSubdomain', 'newBusinessName', 'newContactName', 'newContactPhone'].forEach(function (id) { $(id).value = ''; });
+    updatePreview(); openModal(); $('newSubdomain').focus();
+  });
+  $('cancelAddBtn').addEventListener('click', closeModal);
+  $('closeResultBtn').addEventListener('click', function () { closeModal(); loadTenants(); loadStats(); });
+  $('addModal').addEventListener('click', function (e) { if (e.target === $('addModal') && $('createdResult').style.display === 'none') closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && $('createdResult').style.display === 'none') closeModal(); });
+  $('newSubdomain').addEventListener('input', updatePreview);
+
+  $('createTenantBtn').addEventListener('click', function () {
+    var subdomain = cleanSub($('newSubdomain').value);
+    var body = {
+      subdomain: subdomain, vertical_code: $('newVertical').value,
+      business_name: $('newBusinessName').value.trim(),
+      contact_name: $('newContactName').value.trim(), contact_phone: $('newContactPhone').value.trim()
+    };
+    var msg = $('addMsg'), btn = $('createTenantBtn');
+    if (!/^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(subdomain)) { say(msg, 'err', ERR.invalid_subdomain); return; }
+    if (!body.vertical_code) { say(msg, 'err', ERR.vertical_required); return; }
+    if (!body.business_name) { say(msg, 'err', ERR.business_name_required); return; }
+    btn.disabled = true; btn.textContent = 'Создаём…'; say(msg, '', '');
+    post('/api/studio/tenants', body).then(function (res) {
+      $('resultUrl').textContent = urlsFor(subdomain).site;
+      $('resultLogin').textContent = res.admin_login;
+      $('resultPassword').textContent = res.admin_password;
+      $('formBlock').style.display = 'none';
+      $('createdResult').style.display = '';
+    }).catch(function (e) {
+      say(msg, 'err', errText(e));
+    }).then(function () { btn.disabled = false; btn.textContent = 'Создать клиента'; });
+  });
+
+  /* ---------- восстановление сессии ---------- */
+  var savedToken = store.get('studio_token'), savedData = store.get('studio_data');
+  if (savedToken && savedData) {
+    try { studio = JSON.parse(savedData); token = savedToken; } catch (e) { studio = null; token = ''; }
+    if (studio) showMain().catch(function () { logout(); });
+  }
+})();
+</script>
+<script src="/theme.js"></script>
+</body>
+</html>
