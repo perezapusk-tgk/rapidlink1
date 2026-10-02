@@ -817,6 +817,14 @@ app.patch('/api/platform/licenses/:id', platformOwnerAuth, function(req, res) {
   }
   res.json({ ok: true });
 });
+app.get('/api/platform/backup/status', platformOwnerAuth, function(req, res) {
+  res.json(backupMod ? backupMod.status() : { configured: [], passphrase_ok: false, providers: {} });
+});
+
+app.post('/api/platform/backup/run', platformOwnerAuth, function(req, res) {
+  if (!backupMod) return res.status(503).json({ error: 'backup_not_available' });
+  backupMod.run(true, 'manual').then(function(r) { res.json({ ok: true, result: r }); }).catch(function(e) { res.status(500).json({ error: 'backup_failed', message: e.message }); });
+});
 
 /* ============ БИЛЛИНГ КОМИССИИ (вручную) ============ */
 
