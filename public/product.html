@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Torclix Backups — платформа онлайн-записи для бизнеса услуг</title>
-<meta name="description" content="Универсальная платформа онлайн-записи: автомойки, барбершопы, шиномонтаж, детейлинг, массаж и другие вертикали. Готовая система с админкой, кабинетом сотрудника и защищёнными бэкапами.">
+<meta name="description" content="Универсальная платформа онлайн-записи: автомойки, барбершопы, шиномонтаж, детейлинг, массаж и другие вертикали. Бесплатное обслуживание 2 месяца и поддержка первый месяц — включены.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -15,7 +15,8 @@
   --line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
   --ink:#eaf2f0;--mute:#8a9a96;--mute-2:#5d6b68;
   --accent:#2dd4bf;--accent-2:#22d3ee;--accent-glow:rgba(45,212,191,.35);
-  --ok:#4ade80;--radius:20px;
+  --warn:#f59e0b;--warn-glow:rgba(245,158,11,.35);
+  --ok:#4ade80;--danger:#f87171;--radius:20px;
 }
 [data-theme="light"]{
   --bg:#f5f8f7;--bg-2:#ffffff;--card:#ffffff;--card-hover:#ffffff;
@@ -28,6 +29,8 @@ html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--ink);font:16px/1.6 'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
 ::selection{background:var(--accent);color:#04120f}
+
+/* ФОН */
 .bg-aura{position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden}
 .bg-aura::before,.bg-aura::after{content:"";position:absolute;border-radius:50%;filter:blur(120px);opacity:.5}
 .bg-aura::before{width:600px;height:600px;top:-200px;left:-150px;background:radial-gradient(circle,var(--accent-glow),transparent 70%);animation:float1 18s ease-in-out infinite}
@@ -38,6 +41,8 @@ a{color:inherit;text-decoration:none}
 @keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-70px,-50px)}}
 .bg-grid{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 0%,#000 20%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 20%,transparent 75%);opacity:.5}
 [data-theme="light"] .bg-grid{opacity:.3}
+
+/* NAV */
 nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
 nav .wrap{max-width:1180px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;letter-spacing:-.01em}
@@ -48,12 +53,15 @@ nav .wrap{max-width:1180px;margin:0 auto;padding:0 22px;display:flex;align-items
 .nav-cta{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#04120f !important;padding:9px 18px;border-radius:10px;font-weight:700;font-size:.88rem;box-shadow:0 6px 24px -8px var(--accent-glow);transition:transform .2s,box-shadow .2s}
 .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px -8px var(--accent-glow)}
 @media(max-width:760px){.nav-links a:not(.nav-cta){display:none}}
+
 section{padding:90px 22px;position:relative}
 .container{max-width:1180px;margin:0 auto}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
 .eyebrow::before{content:"";width:22px;height:1px;background:var(--accent)}
 h2.title{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;font-weight:800;letter-spacing:-.02em;margin-bottom:18px}
 .lead{font-size:1.05rem;color:var(--mute);max-width:58ch;line-height:1.65}
+
+/* HERO */
 .hero{padding:80px 22px 100px;text-align:center;position:relative}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line-2);padding:7px 14px;border-radius:999px;font-size:.82rem;color:var(--mute);margin-bottom:26px;backdrop-filter:blur(8px)}
 .hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);animation:pulse 2s infinite}
@@ -61,22 +69,42 @@ h2.title{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;font-weight:800;l
 .hero h1{font-size:clamp(2.1rem,6.5vw,4rem);line-height:1.05;font-weight:800;letter-spacing:-.035em;max-width:18ch;margin:0 auto 24px}
 .hero h1 .grad{background:linear-gradient(135deg,var(--accent) 20%,var(--accent-2) 80%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:inline-block}
 .hero .lede{font-size:clamp(1rem,2.2vw,1.2rem);color:var(--mute);max-width:58ch;margin:0 auto 40px;line-height:1.6}
-.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:56px}
+.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:30px}
 .btn{display:inline-flex;align-items:center;gap:10px;padding:15px 30px;border-radius:14px;font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:all .25s cubic-bezier(.2,.7,.3,1);font-family:inherit}
 .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#04120f;box-shadow:0 14px 40px -12px var(--accent-glow)}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 20px 50px -14px var(--accent-glow)}
 .btn-ghost{background:var(--card);border:1px solid var(--line-2);color:var(--ink);backdrop-filter:blur(8px)}
 .btn-ghost:hover{background:var(--card-hover);border-color:var(--accent)}
 .btn svg{width:18px;height:18px}
-.verticals{padding:70px 22px}
-.verticals-head{text-align:center;max-width:640px;margin:0 auto 44px}
-.verticals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;max-width:1000px;margin:0 auto}
-.vertical{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 14px;text-align:center;transition:all .3s;position:relative;overflow:hidden}
-.vertical:hover{transform:translateY(-4px);border-color:var(--accent);background:var(--card-hover)}
-.vertical .v-icon{font-size:1.9rem;margin-bottom:10px;display:block;filter:grayscale(.3);transition:filter .3s}
-.vertical:hover .v-icon{filter:grayscale(0)}
-.vertical .v-name{font-size:.9rem;font-weight:700;color:var(--ink);letter-spacing:-.01em}
-.vertical .v-sub{font-size:.74rem;color:var(--mute-2);margin-top:3px}
+
+/* СЧЁТЧИК */
+.counter-box{
+  display:inline-flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:center;
+  background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.04));
+  border:1px solid rgba(245,158,11,.35);border-radius:999px;
+  padding:12px 24px;margin:0 auto 40px;max-width:520px;
+  animation:counterPulse 3s ease-in-out infinite;
+}
+@keyframes counterPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.25)}50%{box-shadow:0 0 0 12px rgba(245,158,11,0)}}
+.counter-box .c-label{font-size:.85rem;color:var(--warn);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.counter-box .c-progress{display:flex;gap:5px}
+.counter-box .c-dot{width:22px;height:8px;border-radius:4px;background:rgba(255,255,255,.12);transition:background .3s}
+.counter-box .c-dot.taken{background:var(--danger);box-shadow:0 0 8px rgba(248,113,113,.6)}
+.counter-box .c-dot.free{background:var(--ok);box-shadow:0 0 8px rgba(74,222,128,.6)}
+.counter-box .c-text{font-size:.85rem;color:var(--ink);font-weight:600}
+.counter-box .c-text b{color:var(--warn);font-family:'JetBrains Mono',monospace}
+
+/* РАСПРОДАЖА */
+.sale-strip{
+  display:inline-flex;align-items:center;gap:12px;
+  background:linear-gradient(90deg,rgba(248,113,113,.15),rgba(245,158,11,.15));
+  border:1px solid rgba(248,113,113,.3);border-radius:12px;
+  padding:10px 20px;margin-bottom:30px;font-size:.9rem;color:var(--ink);
+}
+.sale-strip .s-tag{background:var(--danger);color:#fff;font-size:.72rem;font-weight:800;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:.06em}
+.sale-strip b{color:var(--warn);font-family:'JetBrains Mono',monospace}
+
+/* МОКАП */
 .mockup{max-width:920px;margin:0 auto;position:relative;border-radius:24px;padding:14px;background:linear-gradient(180deg,var(--card),transparent);border:1px solid var(--line-2);box-shadow:0 40px 120px -40px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03) inset;transform:perspective(1600px) rotateX(4deg);transition:transform .6s cubic-bezier(.2,.7,.3,1)}
 .mockup:hover{transform:perspective(1600px) rotateX(0)}
 .mockup-bar{display:flex;gap:6px;padding:6px 10px 12px}
@@ -96,16 +124,29 @@ h2.title{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;font-weight:800;l
 .mockup-slot{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
 .mockup-slot span{background:var(--card);border:1px solid var(--line);padding:6px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--mute)}
 .mockup-slot span.active{background:var(--accent);color:#04120f;border-color:var(--accent);font-weight:700}
+
+/* ВЕРТИКАЛИ */
+.verticals{padding:70px 22px}
+.verticals-head{text-align:center;max-width:640px;margin:0 auto 44px}
+.verticals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;max-width:1000px;margin:0 auto}
+.vertical{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 14px;text-align:center;transition:all .3s}
+.vertical:hover{transform:translateY(-4px);border-color:var(--accent);background:var(--card-hover)}
+.vertical .v-icon{font-size:1.9rem;margin-bottom:10px;display:block;filter:grayscale(.3);transition:filter .3s}
+.vertical:hover .v-icon{filter:grayscale(0)}
+.vertical .v-name{font-size:.9rem;font-weight:700;color:var(--ink)}
+.vertical .v-sub{font-size:.74rem;color:var(--mute-2);margin-top:3px}
+
+/* ВОЗМОЖНОСТИ */
 .features-head{text-align:center;max-width:640px;margin:0 auto 56px}
 .features-head .lead{margin:0 auto}
 .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
 .feature{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px;position:relative;overflow:hidden;transition:transform .3s,border-color .3s,background .3s;backdrop-filter:blur(8px)}
-.feature::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--accent),transparent 40%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .3s}
 .feature:hover{transform:translateY(-4px);background:var(--card-hover);border-color:var(--line-2)}
-.feature:hover::before{opacity:1}
 .feature .f-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent-glow),transparent);border:1px solid var(--line-2);display:grid;place-items:center;font-size:1.5rem;margin-bottom:18px}
 .feature h3{font-size:1.12rem;font-weight:700;margin-bottom:8px;letter-spacing:-.01em}
 .feature p{color:var(--mute);font-size:.93rem;line-height:1.6}
+
+/* ПРЕИМУЩЕСТВА */
 .why{padding:100px 22px}
 .why-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
 @media(max-width:880px){.why-grid{grid-template-columns:1fr;gap:40px}}
@@ -119,6 +160,8 @@ h2.title{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;font-weight:800;l
 .why-visual .stat-big{position:relative;text-align:center}
 .why-visual .stat-big .n{font-family:'JetBrains Mono',monospace;font-size:clamp(2.6rem,8vw,4rem);font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
 .why-visual .stat-big .t{color:var(--mute);font-size:.9rem;margin-top:10px;letter-spacing:.04em}
+
+/* ТАРИФЫ */
 .pricing-head{text-align:center;max-width:640px;margin:0 auto 56px}
 .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:stretch}
 .plan{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:32px 26px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:transform .3s,border-color .3s}
@@ -127,12 +170,16 @@ h2.title{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;font-weight:800;l
 .plan.popular:hover{transform:scale(1.03) translateY(-4px)}
 @media(max-width:600px){.plan.popular{transform:none}.plan.popular:hover{transform:translateY(-4px)}}
 .plan .badge{position:absolute;top:20px;right:20px;background:var(--accent);color:#04120f;font-size:.7rem;font-weight:800;padding:5px 11px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em}
-.plan .p-name{font-size:1.15rem;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+.plan .badge-hot{background:var(--danger);color:#fff}
+.plan .p-name{font-size:1.15rem;font-weight:800;margin-bottom:6px}
 .plan .p-tag{color:var(--mute);font-size:.86rem;margin-bottom:22px}
-.plan .p-price{font-family:'JetBrains Mono',monospace;font-size:2.2rem;font-weight:700;letter-spacing:-.02em;margin-bottom:6px;color:var(--ink)}
+.plan .p-price{font-family:'JetBrains Mono',monospace;font-size:2.1rem;font-weight:700;letter-spacing:-.02em;margin-bottom:6px;color:var(--ink)}
 .plan.popular .p-price{color:var(--accent)}
-.plan .p-price small{font-size:.9rem;color:var(--mute);font-weight:500}
+.plan .p-price small{font-size:.85rem;color:var(--mute);font-weight:500}
 .plan .p-note{font-size:.78rem;color:var(--mute-2);margin-bottom:22px}
+.plan .p-perks{display:flex;flex-direction:column;gap:6px;margin-bottom:22px;padding:14px;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:12px}
+.plan .p-perks .perk{display:flex;gap:8px;align-items:center;font-size:.82rem;color:var(--ok);font-weight:600}
+.plan .p-perks .perk svg{width:14px;height:14px;flex-shrink:0}
 .plan ul{list-style:none;padding:0;margin:0 0 26px;display:flex;flex-direction:column;gap:11px;flex:1}
 .plan li{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;color:var(--mute);line-height:1.5}
 .plan li svg{flex-shrink:0;width:18px;height:18px;color:var(--accent);margin-top:2px}
@@ -140,14 +187,18 @@ h2.title{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;font-weight:800;l
 .plan .buy:hover{border-color:var(--accent);color:var(--accent)}
 .plan.popular .buy{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#04120f;border:none;box-shadow:0 12px 34px -12px var(--accent-glow)}
 .plan.popular .buy:hover{transform:translateY(-2px)}
+
+/* КАК НАЧАТЬ */
 .steps{padding:100px 22px}
 .steps-head{text-align:center;max-width:640px;margin:0 auto 56px}
-.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;position:relative}
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
 .step{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:34px 26px 26px;position:relative;transition:border-color .3s,transform .3s}
 .step:hover{border-color:var(--accent);transform:translateY(-4px)}
 .step .s-num{position:absolute;top:-18px;left:26px;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#04120f;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1rem;box-shadow:0 8px 24px -8px var(--accent-glow)}
 .step h4{font-size:1.05rem;font-weight:700;margin:0 0 8px}
 .step p{color:var(--mute);font-size:.9rem;line-height:1.55}
+
+/* FAQ */
 .faq{padding:100px 22px}
 .faq-inner{max-width:760px;margin:0 auto}
 .faq-head{text-align:center;margin-bottom:44px}
@@ -158,12 +209,15 @@ h2.title{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;font-weight:800;l
 .faq summary::after{content:"+";font-size:1.5rem;font-weight:400;color:var(--accent);transition:transform .3s;line-height:1}
 .faq details[open] summary::after{transform:rotate(45deg)}
 .faq details p{padding:0 24px 22px;color:var(--mute);font-size:.94rem;line-height:1.65}
+
+/* CTA */
 .cta-final{padding:100px 22px 120px;text-align:center}
 .cta-box{max-width:900px;margin:0 auto;border-radius:32px;padding:70px 30px;background:linear-gradient(135deg,var(--accent-glow),transparent 60%),var(--card);border:1px solid var(--line-2);position:relative;overflow:hidden}
 .cta-box::before{content:"";position:absolute;top:-50%;left:-10%;width:120%;height:200%;background:radial-gradient(circle at 30% 30%,var(--accent-glow),transparent 50%);filter:blur(60px);opacity:.6;animation:float1 16s ease-in-out infinite}
 .cta-box h2{position:relative;font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:800;letter-spacing:-.02em;margin-bottom:18px}
 .cta-box p{position:relative;color:var(--mute);font-size:1.05rem;max-width:50ch;margin:0 auto 32px}
 .cta-box .btn{position:relative}
+
 footer{border-top:1px solid var(--line);padding:40px 22px;text-align:center;color:var(--mute-2);font-size:.85rem}
 footer .brand{justify-content:center;margin-bottom:14px}
 footer a{color:var(--accent)}
@@ -195,7 +249,15 @@ footer a{color:var(--accent)}
   <div class="container">
     <div class="hero-badge"><span class="dot"></span><span>Уже работает на реальных бизнесах</span></div>
     <h1>Онлайн-запись для <span class="grad">любого бизнеса услуг</span></h1>
-    <p class="lede">Мойки, барбершопы, шиномонтаж, детейлинг, массаж, салоны — одна платформа, свой сайт для каждого клиента, автоматический расчёт цен и умное расписание. Всё с телефона, без серверов.</p>
+    <p class="lede">Мойки, барбершопы, шиномонтаж, детейлинг, массаж, салоны — одна платформа, свой сайт для каждого клиента, автоматический расчёт цен и умное расписание.</p>
+
+    <!-- СЧЁТЧИК -->
+    <div class="counter-box" id="counterBox">
+      <span class="c-label">🔥 Акция</span>
+      <div class="c-progress" id="cProgress"></div>
+      <span class="c-text">Осталось <b id="cLeft">3</b> из 5 бесплатных версий</span>
+    </div>
+
     <div class="hero-cta">
       <a href="/" class="btn btn-primary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -203,6 +265,13 @@ footer a{color:var(--accent)}
       </a>
       <a href="#pricing" class="btn btn-ghost">Тарифы и цены</a>
     </div>
+
+    <!-- РАСПРОДАЖА -->
+    <div class="sale-strip">
+      <span class="s-tag">Sale</span>
+      <span>Первым 5 клиентам — <b>2 месяца обслуживания</b> и <b>1 месяц поддержки</b> бесплатно</span>
+    </div>
+
     <div class="mockup reveal">
       <div class="mockup-bar"><span></span><span></span><span></span></div>
       <div class="mockup-screen">
@@ -251,12 +320,15 @@ footer a{color:var(--accent)}
       <p class="lead">Каждая функция решает конкретную задачу: меньше звонков, больше записей, прозрачная выручка.</p>
     </div>
     <div class="features-grid">
-      <div class="feature reveal"><div class="f-icon">🎯</div><h3>Автоопределение категории</h3><p>Клиент вводит параметр (марку, тип, радиус) — система сама подбирает класс и цену. Без уточнений.</p></div>
+      <div class="feature reveal"><div class="f-icon">🎯</div><h3>Автоопределение категории</h3><p>Клиент вводит параметр — система сама подбирает класс и цену. Без уточнений и звонков.</p></div>
       <div class="feature reveal"><div class="f-icon">📅</div><h3>Онлайн-запись 24/7</h3><p>Клиент видит свободные слоты, выбирает услуги и время, подтверждает за минуту. Даже ночью.</p></div>
       <div class="feature reveal"><div class="f-icon">👷</div><h3>Кабинет сотрудника</h3><p>Мастер видит свои записи, отмечает «Начал» и «Готово», видит выручку и свою выплату.</p></div>
       <div class="feature reveal"><div class="f-icon">📊</div><h3>Отчёты и штрафы</h3><p>Выручка за день, средний чек, комиссия мастеров, штрафы — всё считается автоматически.</p></div>
       <div class="feature reveal"><div class="f-icon">🎨</div><h3>Свой сайт для каждого</h3><p>Каждый клиент получает свой поддомен и админку. Студии управляют всеми клиентами из одной панели.</p></div>
-      <div class="feature reveal"><div class="f-icon">🔒</div><h3>Шифрованные бэкапы</h3><p>Данные шифруются и сохраняются в Telegram каждые 10 минут. При перезапуске сервер восстанавливает всё сам.</p></div>
+      <div class="feature reveal"><div class="f-icon">🔒</div><h3>Шифрованные бэкапы</h3><p>Данные шифруются (AES-256) и сохраняются в Telegram каждые 10 минут. При перезапуске сервер восстанавливает всё сам.</p></div>
+      <div class="feature reveal"><div class="f-icon">🚫</div><h3>Без подписок и карт</h3><p>Один платёж — пользуетесь навсегда. Никаких ежемесячных списаний и привязки банковских карт.</p></div>
+      <div class="feature reveal"><div class="f-icon">🛟</div><h3>Поддержка включена</h3><p>Первый месяц поддержки — бесплатно. Поможем с настройкой, ответим на вопросы, решим проблемы.</p></div>
+      <div class="feature reveal"><div class="f-icon">🎁</div><h3>2 месяца обслуживания</h3><p>Первым 5 клиентам — 2 месяца полного обслуживания в подарок. Успейте занять место.</p></div>
     </div>
   </div>
 </section>
@@ -272,6 +344,7 @@ footer a{color:var(--accent)}
           <div class="why-item"><div class="why-num">02</div><div><h4>Цены считаются сами</h4><p>Класс определяется по параметрам. Каждая услуга — своя цена для каждой категории.</p></div></div>
           <div class="why-item"><div class="why-num">03</div><div><h4>Всё видно в реальном времени</h4><p>Выручка, загрузка слотов, работа мастеров — на одном экране, в любой момент.</p></div></div>
           <div class="why-item"><div class="why-num">04</div><div><h4>Данные в безопасности</h4><p>Шифрование AES-256, резервные копии каждые 10 минут, автоматическое восстановление.</p></div></div>
+          <div class="why-item"><div class="why-num">05</div><div><h4>Никаких подписок</h4><p>Один платёж — и система ваша навсегда. Никаких ежемесячных списаний и привязки карт.</p></div></div>
         </div>
       </div>
       <div class="why-visual reveal">
@@ -287,14 +360,18 @@ footer a{color:var(--accent)}
     <div class="pricing-head reveal">
       <div class="eyebrow">Тарифы</div>
       <h2 class="title">Один платёж — без подписок</h2>
-      <p class="lead">Купили один раз — пользуетесь без ежемесячных списаний. Обновления и поддержка включены.</p>
+      <p class="lead">Купили один раз — пользуетесь без ежемесячных списаний. Обслуживание и поддержка включены.</p>
     </div>
     <div class="plans">
       <div class="plan reveal">
         <div class="p-name">Start</div>
         <div class="p-tag">Для одного бизнеса</div>
-        <div class="p-price">200 000 ₽ <small>единоразово</small></div>
+        <div class="p-price">120 000 ₽ <small>единоразово</small></div>
         <div class="p-note">Окупается за первый месяц работы</div>
+        <div class="p-perks">
+          <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2 месяца обслуживания бесплатно</div>
+          <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 месяц поддержки бесплатно</div>
+        </div>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>До 10 клиентов</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 вертикаль</li>
@@ -304,31 +381,39 @@ footer a{color:var(--accent)}
         <a class="buy" href="https://t.me/nikita_seton" target="_blank" rel="noopener">Купить Start</a>
       </div>
       <div class="plan popular reveal">
-        <div class="badge">Хит</div>
-        <div class="p-name">Business</div>
+        <div class="badge badge-hot">🔥 Осталось 3</div>
+        <div class="p-name">Премиум</div>
         <div class="p-tag">Для растущей сети</div>
-        <div class="p-price">500 000 ₽ <small>единоразово</small></div>
+        <div class="p-price">350 000 ₽ <small>единоразово</small></div>
         <div class="p-note">Оптимально для 3–10 точек</div>
+        <div class="p-perks">
+          <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2 месяца обслуживания бесплатно</div>
+          <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 месяц поддержки бесплатно</div>
+        </div>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>До 100 клиентов</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>10 вертикалей</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Приоритетная поддержка</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Обновления 2 года</li>
         </ul>
-        <a class="buy" href="https://t.me/nikita_seton" target="_blank" rel="noopener">Купить Business</a>
+        <a class="buy" href="https://t.me/nikita_seton" target="_blank" rel="noopener">Купить Премиум</a>
       </div>
       <div class="plan reveal">
-        <div class="p-name">Enterprise</div>
+        <div class="p-name">Максимальный</div>
         <div class="p-tag">Для студий и франшиз</div>
-        <div class="p-price">1 000 000 ₽ <small>единоразово</small></div>
+        <div class="p-price">600 000 ₽ <small>единоразово</small></div>
         <div class="p-note">Перепродажа клиентам и своя сеть</div>
+        <div class="p-perks">
+          <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2 месяца обслуживания бесплатно</div>
+          <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 месяц поддержки бесплатно</div>
+        </div>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Без ограничений</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Все вертикали</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Персональная поддержка</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Обновления навсегда</li>
         </ul>
-        <a class="buy" href="https://t.me/nikita_seton" target="_blank" rel="noopener">Купить Enterprise</a>
+        <a class="buy" href="https://t.me/nikita_seton" target="_blank" rel="noopener">Купить Максимальный</a>
       </div>
     </div>
   </div>
@@ -359,17 +444,18 @@ footer a{color:var(--accent)}
     <details class="reveal"><summary>Подходит ли платформа для моего бизнеса?</summary><p>Да, если вы оказываете услуги по записи: мойка, барбершоп, шиномонтаж, детейлинг, массаж, салон красоты, автосервис. Вертикаль настраивается под ваш тип услуг и логику ценообразования.</p></details>
     <details class="reveal"><summary>Нужен ли свой сервер или программист?</summary><p>Нет. Платформа работает в облаке. Вам нужен только браузер на телефоне или компьютере. Все обновления и резервные копии — на нашей стороне.</p></details>
     <details class="reveal"><summary>Что с данными моих клиентов?</summary><p>Базы данных шифруются (AES-256) и резервируются каждые 10 минут. При перезапуске сервер восстанавливает всё автоматически. Данные хранятся только у вас.</p></details>
+    <details class="reveal"><summary>Что входит в бесплатное обслуживание?</summary><p>Первым 5 клиентам мы даём 2 месяца полного обслуживания и 1 месяц поддержки бесплатно. Это значит — мы следим за работой сервера, делаем бэкапы, обновляем систему и отвечаем на вопросы. После — по желанию продлевается.</p></details>
+    <details class="reveal"><summary>Есть ли ежемесячная подписка?</summary><p>Нет. Вы платите один раз за лицензию. Обслуживание и поддержка первые 2 месяца и 1 месяц включены. Дальше — без обязательных платежей.</p></details>
     <details class="reveal"><summary>Можно ли попробовать перед покупкой?</summary><p>Да. Откройте демо-сайт — это живая система с тестовыми данными. Если понравится, напишите в Telegram и мы подберём тариф.</p></details>
-    <details class="reveal"><summary>Есть ли ежемесячная подписка?</summary><p>Нет. Вы платите один раз за лицензию. Обновления и поддержка включены в тариф. Никаких скрытых списаний.</p></details>
   </div>
 </section>
 
 <section class="cta-final">
   <div class="container">
     <div class="cta-box reveal">
-      <h2>Готовы принимать записи онлайн?</h2>
-      <p>Напишите нам в Telegram — покажем демо, ответим на вопросы и поможем выбрать тариф.</p>
-      <a href="https://t.me/nikita_seton" target="_blank" rel="noopener" class="btn btn-primary">Связаться в Telegram</a>
+      <h2>Осталось 3 из 5 бесплатных версий</h2>
+      <p>Успейте получить 2 месяца обслуживания и 1 месяц поддержки бесплатно. Напишите в Telegram — покажем демо и подберём тариф.</p>
+      <a href="https://t.me/nikita_seton" target="_blank" rel="noopener" class="btn btn-primary">Занять место</a>
     </div>
   </div>
 </section>
@@ -386,6 +472,21 @@ footer a{color:var(--accent)}
 
 <script>
 (function(){
+  // Счётчик мест
+  var total = 5, taken = 2;
+  var left = total - taken;
+  var prog = document.getElementById('cProgress');
+  var leftEl = document.getElementById('cLeft');
+  if (prog) {
+    for (var i = 0; i < total; i++) {
+      var d = document.createElement('span');
+      d.className = 'c-dot ' + (i < taken ? 'taken' : 'free');
+      prog.appendChild(d);
+    }
+  }
+  if (leftEl) leftEl.textContent = left;
+
+  // Тема
   var t = document.getElementById('themeToggle');
   var saved = null;
   try { saved = localStorage.getItem('theme'); } catch(e){}
@@ -395,6 +496,8 @@ footer a{color:var(--accent)}
     if (isLight) { document.documentElement.removeAttribute('data-theme'); t.textContent = '🌙'; try { localStorage.setItem('theme','dark'); } catch(e){} }
     else { document.documentElement.setAttribute('data-theme','light'); t.textContent = '☀️'; try { localStorage.setItem('theme','light'); } catch(e){} }
   });
+
+  // Плавное появление
   var io = new IntersectionObserver(function(entries){
     entries.forEach(function(en){ if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
   }, { threshold: 0.12 });
