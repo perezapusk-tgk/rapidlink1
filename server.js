@@ -872,21 +872,5 @@ app.patch('/api/platform/billing/:id', platformOwnerAuth, function(req, res) {
 });
 
 /* ============ ЗАПУСК ============ */
-/* Автозапуск миграций — если БД нет */
-if (!fs.existsSync(path.join(__dirname, 'app.db'))) {
-  console.log('→ app.db не найдена — создаю при старте...');
-  try {
-    require('child_process').execSync('node migrate.js', { stdio: 'inherit', cwd: __dirname });
-    require('child_process').execSync('node migrate-tenants.js', { stdio: 'inherit', cwd: __dirname });
-  } catch (e) {
-    console.error('Migration error:', e.message);
-  }
-}
-if (!fs.existsSync(path.join(__dirname, 'platform.db'))) {
-  console.log('→ platform.db не найдена — создаю при старте...');
-  try {
-    require('child_process').execSync('node migrate-platform.js', { stdio: 'inherit', cwd: __dirname });
-  } catch (e) {
-    console.error('Platform migration error:', e.message);
-  }
-}
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log('Torclix Group listening on', PORT));
