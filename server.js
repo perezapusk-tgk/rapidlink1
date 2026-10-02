@@ -872,5 +872,7 @@ app.patch('/api/platform/billing/:id', platformOwnerAuth, function(req, res) {
 });
 
 /* ============ ЗАПУСК ============ */
+let backupMod = null;
+try { backupMod = require('./backup'); backupMod.start({ db: db, platformDb: platformDb }); } catch (e) { console.error('backup:', e.message); }
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Torclix Group listening on', PORT));
