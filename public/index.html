@@ -4,109 +4,236 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Запись онлайн — Torclix Backups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/styles-fix.css">
 <style>
-body{padding-bottom:90px}
-nav{position:sticky;top:0;z-index:30;background:rgba(10,18,22,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-[data-theme="light"] nav{background:rgba(247,249,250,.85)}
-nav .wrap{max-width:900px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:64px}
-.brand{display:flex;align-items:center;gap:9px;font-size:1.05rem;font-weight:700}
-.pulse{width:9px;height:9px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
-.hero{max-width:900px;margin:0 auto;padding:60px 20px 30px}
-.hero h1{font-size:clamp(2rem,5vw,3rem);line-height:1.08;max-width:20ch;margin-bottom:14px}
-.hero .lede{margin-top:14px;max-width:52ch;color:var(--fg-dim);font-size:1.02rem}
-.hero .badges{display:flex;gap:22px;margin-top:24px;flex-wrap:wrap;font-size:.84rem;color:var(--fg-dim2)}
-.hero .badges b{color:var(--fg);display:block;font-size:1rem;margin-bottom:2px}
-.wizard-wrap{max-width:900px;margin:0 auto;padding:0 20px 40px}
-.steps-indicator{display:flex;gap:0;margin:30px 0 22px}
-.step-dot{flex:1;text-align:center;position:relative;padding-bottom:14px;font-size:.8rem;color:var(--fg-dim2);font-weight:500}
-.step-dot::before{content:attr(data-n);display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--bg-sunken);border:1px solid var(--line);margin:0 auto 8px;font-weight:700;color:var(--fg-dim2)}
-.step-dot.active{color:var(--fg)}
-.step-dot.active::before{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-dim)}
-.step-dot.done::before{background:var(--ok);color:#06171C;border-color:var(--ok);content:"✓"}
-.panel-box{background:var(--bg-elev);border:1px solid var(--line);border-radius:18px;padding:28px}
-.panel-box h2{font-size:1.3rem;margin-bottom:6px}
-.panel-box .hint{color:var(--fg-dim2);font-size:.86rem;margin-bottom:20px}
-.class-tag{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 14px;border-radius:20px;background:var(--bg-sunken);color:var(--fg-dim2);font-size:.85rem;font-weight:600}
-.class-tag.detected{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-strong)}
-.svc-list{margin-top:18px;display:flex;flex-direction:column;gap:8px}
-.svc-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg-sunken);cursor:pointer}
-.svc-row:hover{border-color:var(--accent-strong)}
-.svc-row.checked{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent);box-shadow:0 0 0 3px var(--accent-dim)}
-.svc-row .left{display:flex;align-items:center;gap:12px;flex:1}
-.checkbox{width:20px;height:20px;border-radius:6px;border:1px solid var(--line-strong);flex-shrink:0;position:relative}
-.svc-row.checked .checkbox{background:var(--accent);border-color:var(--accent)}
-.svc-row.checked .checkbox::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--accent-fg);font-weight:700}
-.svc-row .svc-name{font-weight:500;font-size:.94rem}
-.svc-row .price{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.92rem;color:var(--accent);white-space:nowrap}
-.day-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px}
-.day-chip{flex-shrink:0;padding:12px 18px;border-radius:12px;border:1px solid var(--line);background:var(--bg-sunken);font-size:.85rem;text-align:center;cursor:pointer;color:var(--fg-dim);min-width:78px}
-.day-chip .d{font-size:.72rem;color:var(--fg-dim2);display:block;margin-top:4px}
-.day-chip.active{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent);color:var(--fg)}
-.nearest{margin-top:16px;padding:14px 18px;border-radius:12px;background:var(--accent-dim);border:1px solid var(--accent-strong);font-size:.88rem;color:var(--fg)}
-.nearest b{color:var(--accent);cursor:pointer;text-decoration:underline}
-.slot-group{margin-top:22px}
-.slot-group h4{font-size:.82rem;color:var(--fg-dim2);margin-bottom:10px;font-weight:600;text-transform:uppercase}
-.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
-.slot{padding:12px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bg-sunken);font-size:.86rem;text-align:center;cursor:pointer;color:var(--fg-dim);font-family:'JetBrains Mono',monospace;font-weight:600}
-.slot .cap{display:block;font-size:.68rem;color:var(--fg-dim2);margin-top:3px;font-weight:400;font-family:inherit}
-.slot.selected{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent);color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
-.slot.full{opacity:.3;cursor:not-allowed;text-decoration:line-through}
-.summary{background:var(--bg-sunken);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:20px}
-.summary-row{display:flex;justify-content:space-between;font-size:.9rem;padding:7px 0;color:var(--fg-dim)}
-.summary-row.total{border-top:1px solid var(--line);margin-top:10px;padding-top:14px;font-weight:700;color:var(--fg);font-size:1.1rem}
-.summary-row.total span:last-child{font-family:'JetBrains Mono',monospace;color:var(--accent)}
-.panel-actions{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:12px;flex-wrap:wrap}
-.confirm-box{text-align:center;padding:30px 0}
-.confirm-box .check{font-size:4rem;color:var(--ok);margin-bottom:16px}
-.confirm-box .id{font-family:'JetBrains Mono',monospace;font-size:1.8rem;color:var(--accent);margin:16px 0;font-weight:700}
-.sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(17,28,33,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:12px 16px;display:none}
-[data-theme="light"] .sticky-bar{background:rgba(255,255,255,.96)}
-.sticky-bar.show{display:block}
-.sticky-bar .wrap{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.sticky-bar .total{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.15rem;color:var(--accent)}
-.lookup{max-width:900px;margin:40px auto 0;padding:0 20px}
-.lookup-toggle{font-size:.86rem;color:var(--fg-dim2);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit}
-.lookup-panel{margin-top:14px;background:var(--bg-elev);border:1px solid var(--line);border-radius:14px;padding:22px;display:none}
-.lookup-panel.open{display:block}
-.lookup-result{margin-top:14px;padding:14px 16px;background:var(--bg-sunken);border-radius:12px;font-size:.88rem;color:var(--fg-dim)}
-footer{border-top:1px solid var(--line);padding:30px 0;font-size:.82rem;color:var(--fg-dim2);max-width:900px;margin:40px auto 0}
-footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:0 20px}
-.linklike{background:none;border:none;color:var(--accent);font-size:.85rem;cursor:pointer;text-decoration:underline;font-family:inherit}
+:root{
+  --bg:#070b0e;--bg-2:#0b1216;--bg-elev:#101a1e;--bg-sunken:#0a1114;
+  --card:rgba(255,255,255,.03);--card-hover:rgba(255,255,255,.055);
+  --line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);--line-strong:rgba(255,255,255,.22);
+  --ink:#eaf2f0;--mute:#8a9a96;--mute-2:#5d6b68;
+  --accent:#2dd4bf;--accent-2:#22d3ee;--accent-glow:rgba(45,212,191,.35);
+  --accent-fg:#04120f;--accent-dim:rgba(45,212,191,.12);--accent-strong:rgba(45,212,191,.5);
+  --ok:#4ade80;--ok-dim:rgba(74,222,128,.12);--ok-strong:rgba(74,222,128,.4);
+  --warn:#f59e0b;--warn-dim:rgba(245,158,11,.12);
+  --danger:#f87171;--danger-dim:rgba(248,113,113,.12);
+}
+[data-theme="light"]{
+  --bg:#f5f8f7;--bg-2:#ffffff;--bg-elev:#ffffff;--bg-sunken:#f0f4f3;
+  --card:#ffffff;--card-hover:#ffffff;
+  --line:rgba(10,20,20,.08);--line-2:rgba(10,20,20,.14);--line-strong:rgba(10,20,20,.22);
+  --ink:#0a1412;--mute:#4b5b57;--mute-2:#7a8a86;
+  --accent:#0d9488;--accent-2:#0891b2;--accent-glow:rgba(13,148,136,.25);
+  --accent-fg:#ffffff;--accent-dim:rgba(13,148,136,.10);--accent-strong:rgba(13,148,136,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font:16px/1.6 'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  padding-bottom:100px;
+}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--accent);color:var(--accent-fg)}
+button,input,select,textarea{font-family:inherit}
 
-.car-help{font-size:.8rem;color:var(--fg-dim2);margin-top:6px}
-.consent{display:flex;gap:10px;align-items:flex-start;font-size:.85rem;color:var(--fg-dim);margin:14px 0 4px;cursor:pointer;line-height:1.4}
-.consent input{width:auto;margin-top:3px;flex-shrink:0;-webkit-appearance:auto;appearance:auto;accent-color:var(--accent)}
+.bg-aura{position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden}
+.bg-aura::before,.bg-aura::after{content:"";position:absolute;border-radius:50%;filter:blur(120px);opacity:.45}
+.bg-aura::before{width:600px;height:600px;top:-200px;left:-150px;background:radial-gradient(circle,var(--accent-glow),transparent 70%);animation:float1 18s ease-in-out infinite}
+.bg-aura::after{width:700px;height:700px;bottom:-250px;right:-200px;background:radial-gradient(circle,rgba(34,211,238,.22),transparent 70%);animation:float2 22s ease-in-out infinite}
+@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(80px,60px)}}
+@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-70px,-50px)}}
+.bg-grid{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 0%,#000 20%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 20%,transparent 75%);opacity:.35}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+nav .wrap{max-width:1000px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1rem;letter-spacing:-.01em}
+.brand .pulse{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px var(--ok);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.brand-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+nav .btn{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--accent-fg);padding:9px 16px;border-radius:10px;font-weight:700;font-size:.85rem;border:none;cursor:pointer;box-shadow:0 6px 22px -8px var(--accent-glow);transition:transform .2s}
+nav .btn:hover{transform:translateY(-1px)}
+
+/* HERO */
+.hero{max-width:1000px;margin:0 auto;padding:60px 20px 20px;position:relative}
+.hero .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.76rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+.hero .eyebrow::before{content:"";width:22px;height:1px;background:var(--accent)}
+.hero h1{font-size:clamp(2rem,6vw,3.4rem);line-height:1.08;font-weight:800;letter-spacing:-.03em;max-width:20ch;margin-bottom:18px}
+.hero h1 .grad{background:linear-gradient(135deg,var(--accent) 20%,var(--accent-2) 80%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:inline-block}
+.hero .lede{color:var(--mute);font-size:clamp(1rem,2.2vw,1.12rem);max-width:52ch;line-height:1.6;margin-bottom:28px}
+.hero .badges{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.hero .badge-pill{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line-2);padding:9px 16px;border-radius:999px;font-size:.86rem;color:var(--mute);backdrop-filter:blur(8px)}
+.hero .badge-pill b{color:var(--ink);font-weight:700}
+.hero .badge-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+
+/* ШАГИ */
+.wizard-wrap{max-width:1000px;margin:0 auto;padding:20px 20px 60px}
+.steps-indicator{display:flex;gap:8px;margin:30px 0 24px}
+.step-dot{flex:1;text-align:center;position:relative;padding:14px 8px 10px;font-size:.8rem;color:var(--mute-2);font-weight:600;background:var(--card);border:1px solid var(--line);border-radius:14px;transition:all .3s;backdrop-filter:blur(8px)}
+.step-dot::before{content:attr(data-n);display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--bg-sunken);border:1px solid var(--line-2);margin:0 auto 8px;font-weight:700;color:var(--mute-2);font-size:.82rem;transition:all .3s}
+.step-dot.active{color:var(--ink);border-color:var(--accent-strong);background:var(--accent-dim)}
+.step-dot.active::before{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--accent-fg);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-dim)}
+.step-dot.done{border-color:var(--ok-strong);background:var(--ok-dim);color:var(--ok)}
+.step-dot.done::before{background:var(--ok);color:#04120f;border-color:var(--ok);content:"✓"}
+@media(max-width:560px){.step-dot{font-size:.72rem;padding:10px 4px 8px}.step-dot::before{width:22px;height:22px;font-size:.75rem}}
+
+/* ПАНЕЛИ */
+.panel-box{background:var(--card);border:1px solid var(--line-2);border-radius:22px;padding:30px;backdrop-filter:blur(12px);position:relative;overflow:hidden;box-shadow:0 30px 80px -40px rgba(0,0,0,.4)}
+.panel-box h2{font-size:clamp(1.2rem,3vw,1.45rem);font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.panel-box .hint{color:var(--mute);font-size:.9rem;margin-bottom:22px;line-height:1.55}
+
+/* Поля ввода */
+.panel-box label{display:block;font-size:.82rem;font-weight:600;color:var(--mute);margin:0 0 6px;letter-spacing:.02em}
+.panel-box .input,.panel-box input[type="text"],.panel-box input[type="tel"],.panel-box input[type="date"],.panel-box select{width:100%;padding:13px 15px;border:1px solid var(--line-2);border-radius:12px;background:var(--bg-sunken);color:var(--ink);font-size:.95rem;transition:border-color .2s,box-shadow .2s;outline:none}
+.panel-box .input:focus,.panel-box input:focus,.panel-box select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.row-2{grid-template-columns:1fr}}
+.field{margin-bottom:14px}
+
+/* Каталог: ввод авто + класс */
+#calcInputWrap{margin-bottom:18px}
+.car-help{font-size:.8rem;color:var(--mute-2);margin-top:8px}
 .class-pick{margin-top:14px}
 .class-pick.need select{border-color:var(--warn);box-shadow:0 0 0 3px var(--warn-dim)}
-.retry{margin-top:14px}
-.b-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+
+/* Тэг класса */
+.class-tag{display:inline-flex;align-items:center;gap:10px;margin-top:6px;padding:10px 16px;border-radius:14px;background:var(--bg-sunken);color:var(--mute);font-size:.88rem;font-weight:600;border:1px solid var(--line);transition:all .3s}
+.class-tag.detected{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-strong);box-shadow:0 0 0 3px var(--accent-dim)}
+.class-tag.detected::before{content:"✓ ";font-weight:800}
+
+/* Услуги */
+.svc-list{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.svc-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--bg-sunken);cursor:pointer;transition:all .25s cubic-bezier(.2,.7,.3,1);user-select:none}
+.svc-row:hover{border-color:var(--accent-strong);transform:translateY(-1px)}
+.svc-row.checked{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent 70%);box-shadow:0 0 0 3px var(--accent-dim)}
+.svc-row .left{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
+.checkbox{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line-strong);flex-shrink:0;position:relative;transition:all .2s}
+.svc-row.checked .checkbox{background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:var(--accent)}
+.svc-row.checked .checkbox::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--accent-fg);font-weight:800}
+.svc-row .svc-name{font-weight:600;font-size:.94rem;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.svc-row .price{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.92rem;color:var(--accent);white-space:nowrap}
+
+/* Даты */
+.day-chips{display:flex;gap:8px;overflow-x:auto;padding:6px 2px 14px;scrollbar-width:none;-ms-overflow-style:none}
+.day-chips::-webkit-scrollbar{display:none}
+.day-chip{flex-shrink:0;padding:12px 18px;border-radius:14px;border:1px solid var(--line);background:var(--bg-sunken);font-size:.85rem;text-align:center;cursor:pointer;color:var(--mute);min-width:82px;transition:all .25s}
+.day-chip:hover{border-color:var(--accent-strong);color:var(--ink)}
+.day-chip .d{font-size:.72rem;color:var(--mute-2);display:block;margin-top:4px;font-family:'JetBrains Mono',monospace}
+.day-chip.active{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent);color:var(--ink);box-shadow:0 0 0 3px var(--accent-dim)}
+.day-chip.active .d{color:var(--accent)}
+
+/* Ближайшее */
+.nearest{margin-top:16px;padding:16px 20px;border-radius:14px;background:var(--accent-dim);border:1px solid var(--accent-strong);font-size:.92rem;color:var(--ink)}
+.nearest b{color:var(--accent);cursor:pointer;text-decoration:underline;font-family:'JetBrains Mono',monospace;font-weight:700}
+
+/* Слоты */
+.slot-group{margin-top:24px}
+.slot-group h4{font-size:.78rem;color:var(--mute-2);margin-bottom:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.slot{padding:14px 8px;border-radius:12px;border:1px solid var(--line);background:var(--bg-sunken);font-size:.88rem;text-align:center;cursor:pointer;color:var(--mute);font-family:'JetBrains Mono',monospace;font-weight:700;transition:all .2s;position:relative}
+.slot:hover:not(.full){border-color:var(--accent-strong);color:var(--ink);transform:translateY(-1px)}
+.slot .cap{display:block;font-size:.68rem;color:var(--mute-2);margin-top:4px;font-weight:500;font-family:'Manrope',sans-serif}
+.slot.selected{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent);color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.slot.selected .cap{color:var(--accent)}
+.slot.full{opacity:.3;cursor:not-allowed;text-decoration:line-through}
+
+/* Итог */
+.summary{background:var(--bg-sunken);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:20px}
+.summary-row{display:flex;justify-content:space-between;font-size:.92rem;padding:8px 0;color:var(--mute)}
+.summary-row span:last-child{color:var(--ink);font-weight:600}
+.summary-row.total{border-top:1px solid var(--line);margin-top:10px;padding-top:16px;font-weight:800;color:var(--ink);font-size:1.15rem}
+.summary-row.total span:last-child{font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:1.3rem}
+
+/* Кнопки */
+.panel-actions{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:12px;flex-wrap:wrap}
+.btn{font-family:inherit;font-weight:700;border:none;border-radius:12px;padding:14px 24px;font-size:.95rem;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:not(.btn-ghost){background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--accent-fg);box-shadow:0 12px 32px -12px var(--accent-glow)}
+.btn:not(.btn-ghost):hover:not(:disabled){transform:translateY(-2px);box-shadow:0 18px 40px -14px var(--accent-glow)}
+.btn-ghost{background:transparent;border:1px solid var(--line-2);color:var(--ink)}
+.btn-ghost:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+@media(max-width:560px){.panel-actions{flex-direction:column-reverse}.panel-actions .btn{width:100%}}
+
+/* Согласие */
+.consent{display:flex;gap:12px;align-items:flex-start;font-size:.86rem;color:var(--mute);margin:16px 0 4px;cursor:pointer;line-height:1.5;padding:14px;background:var(--bg-sunken);border:1px solid var(--line);border-radius:12px}
+.consent input{width:auto;margin-top:3px;flex-shrink:0;accent-color:var(--accent);width:18px;height:18px}
+.consent a{color:var(--accent);text-decoration:underline}
+
+/* Сообщения */
+.msg{min-height:1.4em;font-size:.88rem;margin-top:12px;color:var(--mute)}
+.msg.err{color:var(--danger)}
+.msg.ok{color:var(--ok)}
+
+/* Подтверждение */
+.confirm-box{text-align:center;padding:20px 0}
+.confirm-box .check{font-size:4.5rem;color:var(--ok);margin-bottom:16px;display:inline-block;animation:pop .5s cubic-bezier(.2,.7,.3,1)}
+@keyframes pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.confirm-box h2{font-size:1.5rem;font-weight:800;margin-bottom:10px}
+.confirm-box .id{font-family:'JetBrains Mono',monospace;font-size:1.6rem;color:var(--accent);margin:20px 0;font-weight:700;letter-spacing:.04em;background:var(--accent-dim);padding:12px 20px;border-radius:14px;display:inline-block;border:1px solid var(--accent-strong)}
+.confirm-box .hint{max-width:44ch;margin:0 auto 20px;color:var(--mute);font-size:.92rem}
+
+/* Поиск записи */
+.lookup{max-width:1000px;margin:20px auto 0;padding:0 20px}
+.lookup-toggle{font-size:.9rem;color:var(--mute);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;padding:10px 0}
+.lookup-toggle:hover{color:var(--accent)}
+.lookup-panel{margin-top:14px;background:var(--card);border:1px solid var(--line-2);border-radius:18px;padding:24px;display:none;backdrop-filter:blur(12px)}
+.lookup-panel.open{display:block;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.lookup-result{margin-top:16px;padding:16px 18px;background:var(--bg-sunken);border-radius:14px;font-size:.9rem;color:var(--mute);border:1px solid var(--line)}
+.b-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
 .b-row:last-child{border-bottom:none}
+.b-row .mono{font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:700}
+.text-dim2{color:var(--mute-2);font-size:.85rem}
+.btn-small{padding:8px 14px;font-size:.82rem;border-radius:8px}
+.btn-danger{background:linear-gradient(135deg,#f87171,#ef4444) !important;color:#fff !important;box-shadow:0 8px 20px -8px rgba(248,113,113,.5) !important}
+
+/* Нижняя панель */
+.sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:35;background:color-mix(in srgb,var(--bg-2) 96%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line-2);padding:14px 16px;display:none}
+.sticky-bar.show{display:block;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sticky-bar .wrap{max-width:1000px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sticky-bar .total{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem;color:var(--accent)}
+.sticky-bar .total span:first-child{color:var(--mute);font-family:'Manrope',sans-serif;font-weight:500;font-size:.88rem;margin-right:6px}
+
+footer{border-top:1px solid var(--line);padding:30px 20px;font-size:.82rem;color:var(--mute-2);max-width:1000px;margin:40px auto 0}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+footer a{color:var(--accent)}
 </style>
 </head>
 <body>
+<div class="bg-aura"></div>
+<div class="bg-grid"></div>
+
 <nav>
   <div class="wrap">
-    <div class="brand"><span class="pulse"></span><span id="brandName">Torclix Backups</span></div>
-    <button class="btn btn-small" id="topBookBtn" type="button">Записаться</button>
+    <div class="brand"><span class="pulse"></span><span class="brand-name" id="brandName">Torclix Backups</span></div>
+    <button class="btn" id="topBookBtn" type="button">Записаться</button>
   </div>
 </nav>
+
 <header class="hero">
+  <div class="eyebrow">Онлайн-запись · без звонков</div>
   <h1 id="heroTitle">Загрузка…</h1>
   <p class="lede" id="heroLede">Загружаем информацию…</p>
   <div class="badges">
-    <div><b id="capacityNum">2</b>записи в час</div>
-    <div id="cityBadge"></div>
-    <div>Мгновенное подтверждение</div>
+    <div class="badge-pill"><span class="dot"></span><b id="capacityNum">2</b> записи в час</div>
+    <div class="badge-pill" id="cityBadge"></div>
+    <div class="badge-pill">⚡ Мгновенное подтверждение</div>
   </div>
 </header>
+
 <div class="wizard-wrap">
   <div class="steps-indicator">
     <div class="step-dot active" data-n="1" id="dot1">Услуги</div>
     <div class="step-dot" data-n="2" id="dot2">Время</div>
     <div class="step-dot" data-n="3" id="dot3">Контакты</div>
   </div>
+
   <div class="panel-box" id="step1">
     <h2>Выберите услуги</h2>
     <p class="hint" id="step1Hint">Загрузка…</p>
@@ -118,6 +245,7 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
       <button class="btn" id="toStep2" type="button" disabled>Далее — выбрать время</button>
     </div>
   </div>
+
   <div class="panel-box" id="step2" style="display:none;">
     <h2>Выберите дату и время</h2>
     <p class="hint">Показываем, сколько мест осталось на каждый час</p>
@@ -129,6 +257,7 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
       <button class="btn" id="toStep3" type="button" disabled>Далее — контакты</button>
     </div>
   </div>
+
   <div class="panel-box" id="step3" style="display:none;">
     <h2>Контакты и подтверждение</h2>
     <p class="hint">Оплата на месте</p>
@@ -144,16 +273,18 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
       <button class="btn" id="confirmBtn" type="button">Подтвердить запись</button>
     </div>
   </div>
+
   <div class="panel-box" id="stepDone" style="display:none;">
     <div class="confirm-box">
       <div class="check">✓</div>
       <h2>Запись подтверждена</h2>
       <div class="id" id="bookingIdOut"></div>
-      <p class="hint" style="max-width:44ch;margin:0 auto 20px;">Сохраните номер записи — по нему и телефону можно найти или отменить запись в блоке «Моя запись» ниже.</p>
+      <p class="hint">Сохраните номер записи — по нему и телефону можно найти или отменить запись в блоке «Моя запись» ниже.</p>
       <button class="btn" id="newBookingBtn" type="button">Записать ещё раз</button>
     </div>
   </div>
 </div>
+
 <div class="lookup">
   <button class="lookup-toggle" id="lookupToggle" type="button">Моя запись — найти или отменить</button>
   <div class="lookup-panel" id="lookupPanel">
@@ -164,15 +295,17 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
     <div id="lookupResult"></div>
   </div>
 </div>
+
 <footer>
   <div class="wrap">
     <div id="footerName">Torclix Backups</div>
     <div>Круглосуточно, без выходных</div>
   </div>
 </footer>
+
 <div class="sticky-bar" id="stickyBar">
   <div class="wrap">
-    <div class="total">Итого: <span id="stickyAmount">0 ₽</span></div>
+    <div class="total"><span>Итого:</span><span id="stickyAmount">0 ₽</span></div>
     <button class="btn" id="stickyBtn" type="button">Далее</button>
   </div>
 </div>
@@ -189,7 +322,6 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
   try { TENANT = new URLSearchParams(location.search).get('tenant'); } catch (e) {}
 
   var BRAND = { title: 'Torclix Backups' };
-  // Запасной поиск, если /cars.js не загрузился
   var FALLBACK = [
     { c: 0, k: ['мотоцикл','скутер','мопед','питбайк','ducati','harley'] },
     { c: 1, k: ['квадроцикл','atv','polaris','can-am','cfmoto','grizzly','снегоход'] },
@@ -213,7 +345,6 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
     return path + (path.indexOf('?') === -1 ? '?' : '&') + 'tenant=' + encodeURIComponent(TENANT);
   }
 
-  // Запрос с таймаутом: сервер на бесплатном хостинге может просыпаться до минуты
   function api(path, opts, timeoutMs) {
     opts = opts || {};
     var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
@@ -234,7 +365,6 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
     });
   }
 
-  /* ---------- загрузка каталога ---------- */
   function boot() {
     $('step1Hint').textContent = 'Загружаем каталог услуг…';
     var slow = setTimeout(function () {
@@ -277,7 +407,7 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
       clearTimeout(slow);
       $('heroTitle').textContent = 'Не удалось загрузить';
       $('heroLede').textContent = 'Сервер не ответил. Проверьте интернет и попробуйте ещё раз.';
-      $('step1').innerHTML = '<p class="hint" style="color:var(--danger);">Не удалось загрузить каталог услуг.</p><button class="btn retry" id="retryBtn" type="button">Повторить</button>';
+      $('step1').innerHTML = '<p class="hint" style="color:var(--danger);">Не удалось загрузить каталог услуг.</p><button class="btn" id="retryBtn" type="button" style="margin-top:14px;">Повторить</button>';
       $('retryBtn').addEventListener('click', function () { location.reload(); });
     });
   }
@@ -305,7 +435,6 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
     });
   }
 
-  /* ---------- определение класса ---------- */
   function classIdByIndex(i) {
     var c = CATALOG.classes[i];
     return c ? c.id : null;
@@ -381,10 +510,9 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
     var cls = CATALOG.classes.filter(function (c) { return c.id === selectedClass; })[0];
     if (!cls) { tag.className = 'class-tag'; tagText.textContent = 'Класс не распознан'; return; }
     tag.className = 'class-tag detected';
-    tagText.textContent = '✓ ' + cls.name + (classLocked ? ' (выбран вручную)' : '');
+    tagText.textContent = cls.name + (classLocked ? ' (выбран вручную)' : ' — определён автоматически');
   }
 
-  /* ---------- услуги ---------- */
   function renderSvcList() {
     var list = $('svcList');
     if (!selectedClass) { list.innerHTML = ''; updateStep1Btn(); updateSticky(); return; }
@@ -442,7 +570,6 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
     updateSticky();
   }
 
-  /* ---------- дата и время ---------- */
   function next7Days() {
     var days = [], today = new Date();
     for (var i = 0; i < 7; i++) { var d = new Date(today); d.setDate(today.getDate() + i); days.push(d); }
@@ -509,7 +636,6 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
     updateSticky();
   }
 
-  /* ---------- подтверждение ---------- */
   function renderSummary() {
     var svc = svcByClass[selectedClass] || [];
     var rows = svc.filter(function (s) { return selectedServices.has(s.id); }).map(function (s) {
@@ -575,7 +701,6 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  /* ---------- моя запись ---------- */
   function doLookup() {
     var phone = $('lookupPhone').value.trim(), box = $('lookupResult');
     if (phone.replace(/\D/g, '').length < 10) { box.innerHTML = '<div class="lookup-result">Введите номер телефона.</div>'; return; }
