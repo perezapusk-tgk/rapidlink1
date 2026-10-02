@@ -1,5 +1,5 @@
 /*
-RapidLink — backend платформы записи.
+Torclix Group — backend платформы записи.
 */
 const express = require('express');
 const bodyParser = require('body-parser');
