@@ -1,7 +1,10 @@
 {
   "name": "rapidlink",
+  "engines": {
+  "node": "22.x"
+  }
   "version": "1.0.0",
-  "description": «TorclixBackups — платформа записи для веб-студий",
+  "description": TorclixBackups — платформа записи для веб-студий",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
