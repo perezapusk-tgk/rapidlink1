@@ -1,4 +1,4 @@
-/* RapidLink — дополнения к styles.css. Подключается ПОСЛЕ него: <link rel="stylesheet" href="/styles-fix.css"> */
+/* Torclix Backups — дополнения к styles.css. Подключается ПОСЛЕ него: <link rel="stylesheet" href="/styles-fix.css"> */
 
 /* родные элементы (календарь, список, прокрутка) в цвет текущей темы */
 [data-theme="dark"] { color-scheme: dark; }

@@ -13,7 +13,7 @@ function rep(name, from, to, expected) {
   s = s.split(from).join(to); console.log('✓ ' + name);
 }
 
-rep('название', 'RapidLink — backend платформы записи.', 'TorclixGroup — backend платформы записи.');
+rep('название', 'Torclix Backups — backend платформы записи.', 'TorclixGroup — backend платформы записи.');
 
 /* ---- каталог данных (постоянный диск, Docker, домашний сервер) ---- */
 rep('DATA_DIR', "const CONFIG_FILE = path.join(__dirname, 'config.json');",

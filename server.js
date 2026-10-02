@@ -61,8 +61,8 @@ try { db.prepare('UPDATE tenants SET studio_id = 0 WHERE id = 1 AND (studio_id I
 try {
   if (db.prepare('SELECT password_hash FROM users').all().some(function(u) { return bcrypt.compareSync('admin123', u.password_hash); }))
     console.error('!!! ПАРОЛЬ АДМИНА ПО УМОЛЧАНИЮ (admin123). Задайте ADMIN_USERNAME и ADMIN_PASSWORD в окружении.');
-  if (platformDb && platformDb.prepare('SELECT password_hash FROM platform_admins').all().some(function(u) { return bcrypt.compareSync('rapidlink2026', u.password_hash); }))
-    console.error('!!! ПАРОЛЬ ВЛАДЕЛЬЦА ПО УМОЛЧАНИЮ (rapidlink2026). Задайте PLATFORM_ADMIN и PLATFORM_PASSWORD в окружении.');
+  if (platformDb && platformDb.prepare('SELECT password_hash FROM platform_admins').all().some(function(u) { return bcrypt.compareSync('Torclix Backups2026', u.password_hash); }))
+    console.error('!!! ПАРОЛЬ ВЛАДЕЛЬЦА ПО УМОЛЧАНИЮ (Torclix Backups2026). Задайте PLATFORM_ADMIN и PLATFORM_PASSWORD в окружении.');
 } catch (e) {}
 const app = express();
 app.set('trust proxy', true);

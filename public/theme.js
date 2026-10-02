@@ -1,7 +1,7 @@
-/* RapidLink — переключение темы */
+/* Torclix Backups — переключение темы */
 (function () {
-  function get() { try { return localStorage.getItem('rapidlink_theme'); } catch (e) { return null; } }
-  function set(v) { try { localStorage.setItem('rapidlink_theme', v); } catch (e) {} }
+  function get() { try { return localStorage.getItem('Torclix Backups_theme'); } catch (e) { return null; } }
+  function set(v) { try { localStorage.setItem('Torclix Backups_theme', v); } catch (e) {} }
   var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
   document.documentElement.setAttribute('data-theme', get() || (prefersLight ? 'light' : 'dark'));
 

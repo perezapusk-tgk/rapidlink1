@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RapidLink — Панель студии</title>
+<title>Torclix Backups — Панель студии</title>
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/styles-fix.css">
 </head>
@@ -26,7 +26,7 @@
 
   <div id="mainView" style="display:none;">
     <div id="welcomeCard" class="card" style="display:none;margin-bottom:18px;background:linear-gradient(135deg,var(--accent-dim),var(--ok-dim));border-color:var(--accent-strong);">
-      <h2 style="margin-top:0;color:var(--fg);">Добро пожаловать в RapidLink</h2>
+      <h2 style="margin-top:0;color:var(--fg);">Добро пожаловать в Torclix Backups</h2>
       <p style="color:var(--fg-dim);font-size:0.94rem;margin-bottom:16px;">Мы создали для вас демо-клиента: откройте его сайт и админку и посмотрите, как работает движок.</p>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px;">
         <a href="#" id="welcomeClientLink" target="_blank" rel="noopener" class="card" style="text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:12px;padding:14px;">
@@ -128,9 +128,9 @@
 (function () {
   'use strict';
 
-  // Базовый домен для клиентов. На нём клиенты открываются по поддомену (mywash.rapidlink.ru).
+  // Базовый домен для клиентов. На нём клиенты открываются по поддомену (mywash.Torclix Backups.ru).
   // На любом другом хосте (например *.onrender.com) используется ссылка вида /?tenant=mywash.
-  var BASE_DOMAIN = 'rapidlink.ru';
+  var BASE_DOMAIN = 'Torclix Backups.ru';
 
   var $ = function (id) { return document.getElementById(id); };
   var token = '', studio = null, verticals = [];
