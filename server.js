@@ -890,6 +890,3 @@ if (!fs.existsSync(path.join(__dirname, 'platform.db'))) {
     console.error('Platform migration error:', e.message);
   }
 }
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Server listening on', PORT));
