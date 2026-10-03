@@ -3,34 +3,57 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Кабинет сотрудника</title>
+<title>Кабинет сотрудника — Torclix Backups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f3f5f4;--card:#fff;--ink:#14201b;--mute:#63706a;--line:#dde3e0;--main:#0f766e;--warn:#b45309;--done:#3f6b3a}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1512;--card:#17211d;--ink:#e8efeb;--mute:#93a39b;--line:#26332d;--main:#2dd4bf;--warn:#f59e0b;--done:#86c27f}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+:root{
+  --bg:#070b0e;--bg-2:#0b1216;--bg-elev:#101a1e;--bg-sunken:#0a1114;
+  --card:rgba(255,255,255,.03);--card-hover:rgba(255,255,255,.055);
+  --line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);--line-strong:rgba(255,255,255,.22);
+  --ink:#eaf2f0;--mute:#8a9a96;--mute-2:#5d6b68;
+  --accent:#2dd4bf;--accent-2:#22d3ee;--accent-fg:#04120f;--accent-glow:rgba(45,212,191,.35);--accent-dim:rgba(45,212,191,.12);--accent-strong:rgba(45,212,191,.5);
+  --ok:#4ade80;--ok-dim:rgba(74,222,128,.12);--ok-strong:rgba(74,222,128,.4);
+  --warn:#f59e0b;--warn-dim:rgba(245,158,11,.12);
+  --danger:#f87171;--danger-dim:rgba(248,113,113,.12);
+}
+[data-theme="light"]{
+  --bg:#f5f8f7;--bg-2:#ffffff;--bg-elev:#ffffff;--bg-sunken:#f0f4f3;
+  --card:#ffffff;--card-hover:#ffffff;
+  --line:rgba(10,20,20,.08);--line-2:rgba(10,20,20,.14);--line-strong:rgba(10,20,20,.22);
+  --ink:#0a1412;--mute:#4b5b57;--mute-2:#7a8a86;
+  --accent:#0d9488;--accent-2:#0891b2;--accent-fg:#ffffff;--accent-dim:rgba(13,148,136,.10);--accent-strong:rgba(13,148,136,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);-webkit-font-smoothing:antialiased}
 main{max-width:520px;margin:0 auto;padding:16px}
-h1{font-size:22px;margin:8px 0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
-label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
-input{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:12px 16px;background:var(--main);color:#fff;cursor:pointer;min-height:44px}
-button.ghost{background:transparent;color:var(--main);border:1px solid var(--main)}
-button:disabled{opacity:.5}
-button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--main);outline-offset:2px}
+h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:8px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px}
+label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px;font-weight:600}
+input{width:100%;font:inherit;padding:12px 14px;border:1px solid var(--line-2);border-radius:10px;background:var(--bg-sunken);color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:13px 16px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--accent-fg);cursor:pointer;min-height:46px;transition:transform .2s,box-shadow .2s;box-shadow:0 10px 28px -12px var(--accent-glow)}
+button:hover:not(:disabled){transform:translateY(-1px)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent-strong)}
+button.ghost:hover:not(:disabled){background:var(--accent-dim)}
 .full{width:100%;margin-top:14px}
-.err{color:var(--warn);min-height:1.4em;margin-top:8px;font-size:14px}
+.err{color:var(--danger);min-height:1.4em;margin-top:8px;font-size:14px}
+.hint{font-size:.82rem;color:var(--mute-2);margin-top:6px}
 .row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
-.time{font-size:22px;font-weight:700}
+.time{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .tag{font-size:13px;color:var(--mute)}
-.st-in_progress .tag{color:var(--warn)}.st-completed .tag{color:var(--done)}
+.st-in_progress .tag{color:var(--warn)}.st-completed .tag{color:var(--ok)}
 .st-completed,.st-cancelled{opacity:.6}
 .actions{display:flex;gap:8px;margin-top:10px}.actions button{flex:1}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
-.sum b{display:block;font-size:18px}.sum span{font-size:12px;color:var(--mute)}
+.sum b{display:block;font-size:18px;font-family:'JetBrains Mono',monospace}.sum span{font-size:12px;color:var(--mute)}
 .empty{color:var(--mute);text-align:center;padding:32px 0}
-a{color:var(--main)}
+a{color:var(--accent)}
+.biz-badge{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--mute);background:var(--bg-sunken);border:1px solid var(--line);padding:4px 10px;border-radius:999px;margin-top:6px}
+.biz-badge b{color:var(--accent);font-weight:700}
 </style>
 </head>
 <body>
@@ -38,16 +61,27 @@ a{color:var(--main)}
   <section id="login" hidden>
     <h1>Вход для сотрудника</h1>
     <div class="card">
+      <label for="tenant">Ваша мойка / салон (поддомен)</label>
+      <input id="tenant" type="text" inputmode="latin" placeholder="например: nsmsl3928" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="hint">Поддомен выдаёт администратор. Вводится один раз — запомним.</div>
+
       <label for="phone">Телефон</label>
       <input id="phone" type="tel" inputmode="tel" placeholder="+79001112233" autocomplete="username">
+
       <label for="pin">PIN (выдаёт администратор)</label>
       <input id="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password">
+
       <button id="loginBtn" class="full">Войти</button>
       <div id="loginErr" class="err" role="alert"></div>
     </div>
   </section>
+
   <section id="work" hidden>
-    <div class="top"><h1 id="hello">Записи</h1><button id="logout" class="ghost">Выйти</button></div>
+    <div class="top">
+      <h1 id="hello">Записи</h1>
+      <button id="logout" class="ghost">Выйти</button>
+    </div>
+    <div id="bizInfo"></div>
     <label for="date">Дата</label>
     <input id="date" type="date">
     <div id="summary" class="card sum" style="margin-top:12px" hidden></div>
@@ -57,17 +91,28 @@ a{color:var(--main)}
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var token = null, name = '';
-  try { token = localStorage.getItem('washerToken'); name = localStorage.getItem('washerName') || ''; } catch (e) {}
+  var token = null, name = '', tenant = '';
+  try {
+    token = localStorage.getItem('washerToken');
+    name = localStorage.getItem('washerName') || '';
+    tenant = localStorage.getItem('washerTenant') || '';
+  } catch (e) {}
+
   var LABEL = { confirmed: 'Ожидает', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменена' };
   var rub = function (n) { return Number(n || 0).toLocaleString('ru-RU') + ' ₽'; };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var today = function () { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 
+  function cleanTenant(v) { return String(v || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, ''); }
+  function withTenant(path) {
+    if (!tenant) return path;
+    return path + (path.indexOf('?') === -1 ? '?' : '&') + 'tenant=' + encodeURIComponent(tenant);
+  }
+
   function api(path, opts) {
     opts = opts || {}; opts.headers = { 'Content-Type': 'application/json' };
     if (token) opts.headers.Authorization = 'Bearer ' + token;
-    return fetch(path, opts).then(function (r) {
+    return fetch(withTenant(path), opts).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (r.status === 401 && token) { logout(); throw new Error('Сессия закончилась. Войдите снова.'); }
         if (!r.ok) throw new Error(j.error === 'invalid_credentials' ? 'Неверный телефон или PIN' :
@@ -78,7 +123,18 @@ a{color:var(--main)}
     });
   }
   function show(inn) { $('login').hidden = inn; $('work').hidden = !inn; if (inn) $('hello').textContent = name ? name : 'Записи'; }
-  function logout() { token = null; try { localStorage.removeItem('washerToken'); localStorage.removeItem('washerName'); } catch (e) {} show(false); }
+  function logout() {
+    token = null;
+    try { localStorage.removeItem('washerToken'); localStorage.removeItem('washerName'); } catch (e) {}
+    show(false);
+    $('pin').value = '';
+  }
+
+  function renderBiz() {
+    var box = $('bizInfo');
+    if (!tenant) { box.innerHTML = ''; return; }
+    box.innerHTML = '<div class="biz-badge">🏢 Мойка: <b>' + esc(tenant) + '</b></div>';
+  }
 
   function load() {
     api('/api/washer/bookings?date=' + $('date').value).then(function (r) {
@@ -97,25 +153,40 @@ a{color:var(--main)}
       }).join('') : '<div class="empty">На эту дату записей нет</div>';
     }).catch(function (e) { $('list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
   }
+
   $('list').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-id]'); if (!b) return; b.disabled = true;
     api('/api/washer/bookings/' + b.dataset.id + '/status', { method: 'POST', body: JSON.stringify({ status: b.dataset.st }) })
       .then(load).catch(function (er) { alert(er.message); b.disabled = false; });
   });
+
   $('loginBtn').addEventListener('click', function () {
     $('loginErr').textContent = '';
-    api('/api/washer/login' + location.search, { method: 'POST', body: JSON.stringify({ phone: $('phone').value.trim(), pin: $('pin').value }) })
-      .then(function (r) { token = r.token; name = (r.washer && r.washer.name) || '';
+    var t = cleanTenant($('tenant').value);
+    if (!t) { $('loginErr').textContent = 'Укажите поддомен (выдаёт администратор).'; return; }
+    tenant = t;
+    try { localStorage.setItem('washerTenant', tenant); } catch (e) {}
+    api('/api/washer/login', { method: 'POST', body: JSON.stringify({ phone: $('phone').value.trim(), pin: $('pin').value }) })
+      .then(function (r) {
+        token = r.token; name = (r.washer && r.washer.name) || '';
         try { localStorage.setItem('washerToken', token); localStorage.setItem('washerName', name); } catch (e) {}
-        show(true); load(); })
+        show(true); renderBiz(); load();
+      })
       .catch(function (e) { $('loginErr').textContent = e.message; });
   });
+
   $('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('loginBtn').click(); });
+  $('tenant').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('phone').focus(); });
   $('logout').addEventListener('click', logout);
   $('date').addEventListener('change', load);
   $('date').value = today();
-  if (token) { show(true); load(); } else show(false);
+
+  // Восстанавливаем поддомен при загрузке
+  if (tenant) $('tenant').value = tenant;
+
+  if (token) { show(true); renderBiz(); load(); } else show(false);
 })();
 </script>
+<script src="/theme.js"></script>
 </body>
 </html>
