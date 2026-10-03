@@ -73,9 +73,9 @@
       </div>
       <div class="stat stat-ok">
         <div class="stat-icon">📈</div>
-        <div class="lbl">Ваша комиссия (3%)</div>
-        <div class="val ok" id="statCommission">0 ₽</div>
-        <div class="sub">за всё время</div>
+        <div class="lbl">Лицензий активно</div>
+        <div class="val ok" id="statLicenses">0</div>
+        <div class="sub">в работе</div>
       </div>
     </div>
 
@@ -193,7 +193,11 @@ async function loadSummary() {
     document.getElementById('statStudios').textContent = res.studios_count;
     document.getElementById('statTenants').textContent = res.tenants_count;
     document.getElementById('statRevenue').textContent = rub(res.total_revenue);
-    document.getElementById('statCommission').textContent = rub(res.platform_commission);
+    try {
+      const lic = await api('/api/platform/licenses');
+      const active = (lic.licenses || []).filter(function(l) { return l.status === 'active'; }).length;
+      document.getElementById('statLicenses').textContent = active;
+    } catch (e) {}
   } catch (e) {
     if (e.status === 401) { document.getElementById('logoutBtn').click(); }
   }
@@ -231,7 +235,6 @@ async function loadStudios() {
         '<div class="stats-row">' +
           '<div class="stat-mini"><span class="lbl">Клиентов</span><span class="val">' + s.tenants_count + '</span></div>' +
           '<div class="stat-mini"><span class="lbl">Оборот</span><span class="val">' + rub(s.revenue) + '</span></div>' +
-          '<div class="stat-mini"><span class="lbl">Ваш 3%</span><span class="val ok">' + rub(s.commission_amount) + '</span></div>' +
           '<div class="stat-mini"><span class="lbl">Статус</span><span class="val"><span class="badge badge-' + (s.status === 'active' ? 'ok' : 'danger') + '">' + esc(s.status) + '</span></span></div>' +
         '</div>' +
       '</div>' +
