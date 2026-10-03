@@ -1,5 +1,5 @@
 /*
-Torclix Group — backend платформы записи.
+Torclix Backups — backend платформы записи.
 */
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -25,7 +25,6 @@ if (!CONFIG.jwtSecret || CONFIG.jwtSecret === 'replace-me' || String(CONFIG.jwtS
   console.error('FATAL: задайте JWT_SECRET (32+ символов) в переменных окружения. Запуск остановлен.');
   process.exit(1);
 }
-// Миграции ДО открытия БД: new Database() сам создаёт пустой файл, поэтому старая проверка после него не срабатывала никогда.
 function dbMissing(f) { const p = path.join(__dirname, f); return !fs.existsSync(p) || fs.statSync(p).size === 0; }
 if (dbMissing('app.db')) {
   console.log('→ app.db нет или пуста — запускаю миграции...');
@@ -40,7 +39,7 @@ if (dbMissing('platform.db')) {
   catch (e) { console.error('Platform migration error:', e.message); }
 }
 const db = new Database(path.join(__dirname, 'app.db'));
-db.pragma('journal_mode = WAL'); // нужен для потоковых копий Litestream
+db.pragma('journal_mode = WAL');
 try {
   if (!db.prepare('PRAGMA table_info(washers)').all().some(function(c) { return c.name === 'pin_hash'; })) db.exec('ALTER TABLE washers ADD COLUMN pin_hash TEXT');
   if (!db.prepare('PRAGMA table_info(bookings)').all().some(function(c) { return c.name === 'car'; })) db.exec('ALTER TABLE bookings ADD COLUMN car TEXT');
@@ -50,19 +49,28 @@ try {
   if (bcols.indexOf('consent_at') === -1) db.exec('ALTER TABLE bookings ADD COLUMN consent_at TEXT');
   if (!db.prepare('PRAGMA table_info(services)').all().some(function(c) { return c.name === 'active'; })) db.exec('ALTER TABLE services ADD COLUMN active INTEGER DEFAULT 1');
 } catch (e) { console.error('pin_hash:', e.message); }
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS tenant_hours (
+    tenant_id INTEGER NOT NULL,
+    weekday INTEGER NOT NULL,
+    open_hour INTEGER NOT NULL,
+    close_hour INTEGER NOT NULL,
+    slot_capacity INTEGER DEFAULT 1,
+    PRIMARY KEY (tenant_id, weekday)
+  )`);
+} catch (e) { console.error('tenant_hours:', e.message); }
 let platformDb = null;
 if (fs.existsSync(path.join(__dirname, 'platform.db'))) {
   platformDb = new Database(path.join(__dirname, 'platform.db'));
   platformDb.pragma('journal_mode = WAL');
 }
 
-// Тенант 1 (ваша мойка) не должен принадлежать студии №1: иначе первый покупатель увидит и сможет заархивировать его.
 try { db.prepare('UPDATE tenants SET studio_id = 0 WHERE id = 1 AND (studio_id IS NULL OR studio_id != 0)').run(); } catch (e) {}
 try {
   if (db.prepare('SELECT password_hash FROM users').all().some(function(u) { return bcrypt.compareSync('admin123', u.password_hash); }))
     console.error('!!! ПАРОЛЬ АДМИНА ПО УМОЛЧАНИЮ (admin123). Задайте ADMIN_USERNAME и ADMIN_PASSWORD в окружении.');
-  if (platformDb && platformDb.prepare('SELECT password_hash FROM platform_admins').all().some(function(u) { return bcrypt.compareSync('Torclix Backups2026', u.password_hash); }))
-    console.error('!!! ПАРОЛЬ ВЛАДЕЛЬЦА ПО УМОЛЧАНИЮ (Torclix Backups2026). Задайте PLATFORM_ADMIN и PLATFORM_PASSWORD в окружении.');
+  if (platformDb && platformDb.prepare('SELECT password_hash FROM platform_admins').all().some(function(u) { return bcrypt.compareSync('rapidlink2026', u.password_hash); }))
+    console.error('!!! ПАРОЛЬ ВЛАДЕЛЬЦА ПО УМОЛЧАНИЮ (rapidlink2026). Задайте PLATFORM_ADMIN и PLATFORM_PASSWORD в окружении.');
 } catch (e) {}
 const app = express();
 app.set('trust proxy', true);
@@ -100,7 +108,6 @@ function rateLimit(opts) {
 }
 const loginLimiter = rateLimit({ windowMs: 600000, max: 15 });
 const phoneLimiter = rateLimit({ windowMs: 600000, max: 8, byBody: true });
-// Сотрудники: блокировка всего на 1 минуту, но не более 30 попыток в сутки на связку IP+телефон (защита PIN от перебора)
 const washerIpLimiter = rateLimit({ windowMs: 60000, max: 20 });
 const washerMinLimiter = rateLimit({ windowMs: 60000, max: 5, byBody: true });
 const washerDayLimiter = rateLimit({ windowMs: 86400000, max: 30, byBody: true, code: 'locked_today' });
@@ -187,11 +194,37 @@ app.get('/api/slots', function(req, res) {
   const tid = resolveTenantId(req);
   const date = req.query.date;
   if (!isValidDate(date)) return res.status(400).json({ error: 'valid date required' });
+
+  const d = new Date(date + 'T12:00:00');
+  const weekday = d.getDay();
+
+  let hours = db.prepare('SELECT open_hour, close_hour, slot_capacity FROM tenant_hours WHERE tenant_id = ? AND weekday = ?').get(tid, weekday);
+  let capacity = 2, openH = 0, closeH = 23;
+
+  if (hours) {
+    openH = hours.open_hour;
+    closeH = hours.close_hour;
+    capacity = hours.slot_capacity || 1;
+  } else {
+    const tenant = db.prepare('SELECT vertical_code FROM tenants WHERE id = ?').get(tid);
+    const vc = tenant ? tenant.vertical_code : 'wash';
+    if (vc === 'barber')        { openH = 10; closeH = 21; capacity = 1; }
+    else if (vc === 'beauty')   { openH = 9;  closeH = 20; capacity = 1; }
+    else if (vc === 'massage')  { openH = 9;  closeH = 21; capacity = 1; }
+    else if (vc === 'tire')     { openH = 8;  closeH = 20; capacity = 2; }
+    else if (vc === 'detailing'){ openH = 9;  closeH = 20; capacity = 1; }
+    else                        { openH = 0;  closeH = 23; capacity = 2; }
+  }
+
   const counts = {};
   db.prepare('SELECT hour, COUNT(*) as cnt FROM bookings WHERE date = ? AND status = ? AND tenant_id = ? GROUP BY hour').all(date, 'confirmed', tid).forEach(function(r) { counts[r.hour] = r.cnt; });
+
   const slots = [];
-  for (let h = 0; h < 24; h++) { const used = counts[h] || 0; slots.push({ hour: h, remaining: Math.max(0, 2 - used) }); }
-  res.json({ date: date, capacity: 2, slots: slots });
+  for (let h = openH; h <= closeH; h++) {
+    const used = counts[h] || 0;
+    slots.push({ hour: h, remaining: Math.max(0, capacity - used) });
+  }
+  res.json({ date: date, capacity: capacity, open_hour: openH, close_hour: closeH, slots: slots });
 });
 
 app.post('/api/bookings', bookingLimiter, function(req, res) {
@@ -277,9 +310,10 @@ app.get('/api/admin/bookings', authMiddleware, function(req, res) {
     r.extras = extras;
     r.services_names = names.concat(extras.map(function(x) { return x.name; }));
   });
-  res.json({ bookings: rows });
+  const tenant = db.prepare('SELECT vertical_code FROM tenants WHERE id = ?').get(tid);
+  const vertical_code = tenant ? tenant.vertical_code : 'wash';
+  res.json({ bookings: rows, vertical_code: vertical_code });
 });
-
 app.get('/api/admin/classes', authMiddleware, function(req, res) {
   res.json({ classes: db.prepare('SELECT id, name FROM classes WHERE tenant_id = ? ORDER BY id').all(req.user.tenant_id || 1) });
 });
@@ -673,6 +707,26 @@ app.get('/api/studio/tenants', studioAuth, function(req, res) {
   res.json({ tenants: db.prepare('SELECT * FROM tenants WHERE studio_id = ? ORDER BY created_at DESC').all(req.studio.studio_id) });
 });
 
+app.get('/api/studio/tenants/:id/credentials', studioAuth, function(req, res) {
+  const sid = req.studio.studio_id;
+  const tenant = db.prepare('SELECT * FROM tenants WHERE id = ? AND studio_id = ?').get(req.params.id, sid);
+  if (!tenant) return res.status(404).json({ error: 'not_found' });
+  const admin = db.prepare('SELECT username FROM users WHERE tenant_id = ? AND role = ? LIMIT 1').get(tenant.id, 'admin');
+  if (!admin) return res.status(404).json({ error: 'no_admin' });
+  res.json({ login: admin.username, tenant_id: tenant.id, subdomain: tenant.subdomain });
+});
+
+app.post('/api/studio/tenants/:id/reset-password', studioAuth, function(req, res) {
+  const sid = req.studio.studio_id;
+  const tenant = db.prepare('SELECT * FROM tenants WHERE id = ? AND studio_id = ?').get(req.params.id, sid);
+  if (!tenant) return res.status(404).json({ error: 'not_found' });
+  const admin = db.prepare('SELECT id, username FROM users WHERE tenant_id = ? AND role = ? LIMIT 1').get(tenant.id, 'admin');
+  if (!admin) return res.status(404).json({ error: 'no_admin' });
+  const newPass = 'rl' + Math.random().toString(36).slice(2, 10);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(bcrypt.hashSync(newPass, 10), admin.id);
+  res.json({ login: admin.username, password: newPass });
+});
+
 app.post('/api/studio/tenants', studioAuth, function(req, res) {
   if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
   const sid = req.studio.studio_id;
@@ -769,6 +823,43 @@ app.get('/api/platform/studios', platformOwnerAuth, function(req, res) {
   res.json({ studios: enriched });
 });
 
+app.get('/api/platform/tenants', platformOwnerAuth, function(req, res) {
+  if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
+  const tenants = db.prepare(`
+    SELECT t.*, s.name AS studio_name
+    FROM tenants t
+    LEFT JOIN studios s ON s.id = t.studio_id
+    ORDER BY t.created_at DESC
+  `).all();
+  res.json({ tenants: tenants });
+});
+
+app.patch('/api/platform/tenants/:id', platformOwnerAuth, function(req, res) {
+  const status = (req.body || {}).status;
+  if (['active', 'pending', 'archived'].indexOf(status) === -1) return res.status(400).json({ error: 'invalid_status' });
+  const rec = db.prepare('SELECT * FROM tenants WHERE id = ?').get(req.params.id);
+  if (!rec) return res.status(404).json({ error: 'not_found' });
+  db.prepare('UPDATE tenants SET status = ? WHERE id = ?').run(status, rec.id);
+  res.json({ ok: true });
+});
+
+app.delete('/api/platform/tenants/:id', platformOwnerAuth, function(req, res) {
+  const rec = db.prepare('SELECT * FROM tenants WHERE id = ?').get(req.params.id);
+  if (!rec) return res.status(404).json({ error: 'not_found' });
+  if (rec.id === 1) return res.status(400).json({ error: 'cannot_delete_primary' });
+  db.transaction(function() {
+    db.prepare('DELETE FROM bookings WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM washers WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM services WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM classes WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM users WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM fines WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM tenant_hours WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM tenants WHERE id = ?').run(rec.id);
+  })();
+  res.json({ ok: true });
+});
+
 app.get('/api/platform/licenses', platformOwnerAuth, function(req, res) {
   if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
   const licenses = platformDb.prepare('SELECT * FROM licenses ORDER BY id DESC').all();
@@ -816,14 +907,6 @@ app.patch('/api/platform/licenses/:id', platformOwnerAuth, function(req, res) {
     platformDb.prepare('UPDATE studios SET status = ? WHERE license_key = ?').run('suspended', rec.key);
   }
   res.json({ ok: true });
-});
-app.get('/api/platform/backup/status', platformOwnerAuth, function(req, res) {
-  res.json(backupMod ? backupMod.status() : { configured: [], passphrase_ok: false, providers: {} });
-});
-
-app.post('/api/platform/backup/run', platformOwnerAuth, function(req, res) {
-  if (!backupMod) return res.status(503).json({ error: 'backup_not_available' });
-  backupMod.run(true, 'manual').then(function(r) { res.json({ ok: true, result: r }); }).catch(function(e) { res.status(500).json({ error: 'backup_failed', message: e.message }); });
 });
 
 /* ============ БИЛЛИНГ КОМИССИИ (вручную) ============ */
@@ -880,7 +963,5 @@ app.patch('/api/platform/billing/:id', platformOwnerAuth, function(req, res) {
 });
 
 /* ============ ЗАПУСК ============ */
-let backupMod = null;
-try { backupMod = require('./backup'); backupMod.start({ db: db, platformDb: platformDb }); } catch (e) { console.error('backup:', e.message); }
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Torclix Group listening on', PORT));
+app.listen(PORT, () => console.log('Torclix Backups listening on', PORT));
