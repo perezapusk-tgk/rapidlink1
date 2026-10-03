@@ -835,6 +835,29 @@ app.get('/api/platform/studios', platformOwnerAuth, function(req, res) {
   res.json({ studios: enriched });
 });
 
+app.patch('/api/platform/studios/:id', platformOwnerAuth, function(req, res) {
+  if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
+  const status = (req.body || {}).status;
+  if (['active', 'suspended'].indexOf(status) === -1) return res.status(400).json({ error: 'invalid_status' });
+  const rec = platformDb.prepare('SELECT * FROM studios WHERE id = ?').get(req.params.id);
+  if (!rec) return res.status(404).json({ error: 'not_found' });
+  platformDb.prepare('UPDATE studios SET status = ? WHERE id = ?').run(status, rec.id);
+  res.json({ ok: true });
+});
+
+app.delete('/api/platform/studios/:id', platformOwnerAuth, function(req, res) {
+  if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
+  const rec = platformDb.prepare('SELECT * FROM studios WHERE id = ?').get(req.params.id);
+  if (!rec) return res.status(404).json({ error: 'not_found' });
+  const tenantCount = db.prepare('SELECT COUNT(*) as c FROM tenants WHERE studio_id = ?').get(rec.id);
+  if (tenantCount && tenantCount.c > 0) {
+    return res.status(400).json({ error: 'studio_has_tenants', count: tenantCount.c });
+  }
+  platformDb.prepare('UPDATE licenses SET studio_id = NULL WHERE studio_id = ?').run(rec.id);
+  platformDb.prepare('DELETE FROM studios WHERE id = ?').run(rec.id);
+  res.json({ ok: true });
+});
+
 app.get('/api/platform/tenants', platformOwnerAuth, function(req, res) {
   if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
   const tenants = db.prepare(`
@@ -917,31 +940,18 @@ app.patch('/api/platform/licenses/:id', platformOwnerAuth, function(req, res) {
   platformDb.prepare('UPDATE licenses SET status = ? WHERE id = ?').run(status, req.params.id);
   if (status === 'revoked') {
     platformDb.prepare('UPDATE studios SET status = ? WHERE license_key = ?').run('suspended', rec.key);
+  } else if (status === 'active' || status === 'issued') {
+    platformDb.prepare('UPDATE studios SET status = ? WHERE license_key = ?').run('active', rec.key);
   }
   res.json({ ok: true });
 });
 
-/* ============ УДАЛЕНИЕ ЛИЦЕНЗИЙ ============ */
 app.delete('/api/platform/licenses/:id', platformOwnerAuth, function(req, res) {
   if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
   const rec = platformDb.prepare('SELECT * FROM licenses WHERE id = ?').get(req.params.id);
   if (!rec) return res.status(404).json({ error: 'not_found' });
   if (rec.status === 'active') return res.status(400).json({ error: 'license_is_active' });
   platformDb.prepare('DELETE FROM licenses WHERE id = ?').run(rec.id);
-  res.json({ ok: true });
-});
-
-/* ============ УДАЛЕНИЕ СТУДИЙ ============ */
-app.delete('/api/platform/studios/:id', platformOwnerAuth, function(req, res) {
-  if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
-  const rec = platformDb.prepare('SELECT * FROM studios WHERE id = ?').get(req.params.id);
-  if (!rec) return res.status(404).json({ error: 'not_found' });
-  const tenantCount = db.prepare('SELECT COUNT(*) as c FROM tenants WHERE studio_id = ?').get(rec.id);
-  if (tenantCount && tenantCount.c > 0) {
-    return res.status(400).json({ error: 'studio_has_tenants', count: tenantCount.c });
-  }
-  platformDb.prepare('UPDATE licenses SET studio_id = NULL WHERE studio_id = ?').run(rec.id);
-  platformDb.prepare('DELETE FROM studios WHERE id = ?').run(rec.id);
   res.json({ ok: true });
 });
 
