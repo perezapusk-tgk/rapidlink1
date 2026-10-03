@@ -194,13 +194,10 @@ app.get('/api/slots', function(req, res) {
   const tid = resolveTenantId(req);
   const date = req.query.date;
   if (!isValidDate(date)) return res.status(400).json({ error: 'valid date required' });
-
   const d = new Date(date + 'T12:00:00');
   const weekday = d.getDay();
-
   let hours = db.prepare('SELECT open_hour, close_hour, slot_capacity FROM tenant_hours WHERE tenant_id = ? AND weekday = ?').get(tid, weekday);
   let capacity = 2, openH = 0, closeH = 23;
-
   if (hours) {
     openH = hours.open_hour;
     closeH = hours.close_hour;
@@ -215,10 +212,8 @@ app.get('/api/slots', function(req, res) {
     else if (vc === 'detailing'){ openH = 9;  closeH = 20; capacity = 1; }
     else                        { openH = 0;  closeH = 23; capacity = 2; }
   }
-
   const counts = {};
   db.prepare('SELECT hour, COUNT(*) as cnt FROM bookings WHERE date = ? AND status = ? AND tenant_id = ? GROUP BY hour').all(date, 'confirmed', tid).forEach(function(r) { counts[r.hour] = r.cnt; });
-
   const slots = [];
   for (let h = openH; h <= closeH; h++) {
     const used = counts[h] || 0;
@@ -314,6 +309,7 @@ app.get('/api/admin/bookings', authMiddleware, function(req, res) {
   const vertical_code = tenant ? tenant.vertical_code : 'wash';
   res.json({ bookings: rows, vertical_code: vertical_code });
 });
+
 app.get('/api/admin/classes', authMiddleware, function(req, res) {
   res.json({ classes: db.prepare('SELECT id, name FROM classes WHERE tenant_id = ? ORDER BY id').all(req.user.tenant_id || 1) });
 });
@@ -629,7 +625,7 @@ app.post('/api/studio/login', loginLimiter, function(req, res) {
   let studio = platformDb.prepare('SELECT * FROM studios WHERE license_key = ?').get(key);
   let isNewStudio = false;
   if (!studio) {
-    const info = platformDb.prepare('INSERT INTO studios (subdomain, name, tier, license_key, commission_percent, max_tenants, max_verticals, status, created_at) VALUES (?, ?, ?, ?, 3.0, ?, ?, ?, ?)').run('studio-' + license.id, 'Студия #' + license.id, license.tier, key, license.max_tenants, license.max_verticals, 'active', new Date().toISOString());
+    const info = platformDb.prepare('INSERT INTO studios (subdomain, name, tier, license_key, commission_percent, max_tenants, max_verticals, status, created_at) VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?)').run('studio-' + license.id, 'Студия #' + license.id, license.tier, key, license.max_tenants, license.max_verticals, 'active', new Date().toISOString());
     studio = platformDb.prepare('SELECT * FROM studios WHERE id = ?').get(info.lastInsertRowid);
     isNewStudio = true;
   }
@@ -685,7 +681,7 @@ app.post('/api/studio/login', loginLimiter, function(req, res) {
   const token = jwt.sign({ studio_id: studio.id, tier: studio.tier, role: 'studio' }, CONFIG.jwtSecret, { expiresIn: '7d' });
   res.json({
     token: token,
-    studio: { id: studio.id, name: studio.name, tier: studio.tier, max_tenants: studio.max_tenants, max_verticals: studio.max_verticals, commission_percent: studio.commission_percent },
+    studio: { id: studio.id, name: studio.name, tier: studio.tier, max_tenants: studio.max_tenants, max_verticals: studio.max_verticals, commission_percent: 0 },
     is_new: isNewStudio,
     demo_created: demoTenantCreated,
     demo_login: demoLogin,
@@ -725,6 +721,24 @@ app.post('/api/studio/tenants/:id/reset-password', studioAuth, function(req, res
   const newPass = 'rl' + Math.random().toString(36).slice(2, 10);
   db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(bcrypt.hashSync(newPass, 10), admin.id);
   res.json({ login: admin.username, password: newPass });
+});
+
+app.delete('/api/studio/tenants/:id/force', studioAuth, function(req, res) {
+  const sid = req.studio.studio_id;
+  const rec = db.prepare('SELECT * FROM tenants WHERE id = ? AND studio_id = ?').get(req.params.id, sid);
+  if (!rec) return res.status(404).json({ error: 'not_found' });
+  if (rec.id === 1) return res.status(400).json({ error: 'cannot_delete_primary' });
+  db.transaction(function() {
+    db.prepare('DELETE FROM bookings WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM washers WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM services WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM classes WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM users WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM fines WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM tenant_hours WHERE tenant_id = ?').run(rec.id);
+    db.prepare('DELETE FROM tenants WHERE id = ?').run(rec.id);
+  })();
+  res.json({ ok: true });
 });
 
 app.post('/api/studio/tenants', studioAuth, function(req, res) {
@@ -776,9 +790,7 @@ app.get('/api/studio/stats', studioAuth, function(req, res) {
   const base = "FROM bookings b JOIN tenants t ON t.id = b.tenant_id WHERE t.studio_id = ? AND t.subdomain NOT LIKE 'demo-%' AND b.status IN ('confirmed','completed')";
   const all = db.prepare('SELECT COALESCE(SUM(b.total),0) AS rev, COUNT(b.id) AS n ' + base).get(sid);
   const mon = db.prepare('SELECT COALESCE(SUM(b.total),0) AS rev ' + base + ' AND b.date LIKE ?').get(sid, new Date().toISOString().slice(0, 7) + '%');
-  let pct = 3;
-  if (platformDb) { const st = platformDb.prepare('SELECT commission_percent FROM studios WHERE id = ?').get(sid); if (st && st.commission_percent != null) pct = st.commission_percent; }
-  res.json({ bookings_total: all.n, revenue_total: all.rev, commission_percent: pct, commission_total: Math.round(all.rev * pct / 100), commission_month: Math.round(mon.rev * pct / 100) });
+  res.json({ bookings_total: all.n, revenue_total: all.rev, commission_percent: 0, commission_total: 0, commission_month: 0 });
 });
 
 app.delete('/api/studio/tenants/:id', studioAuth, function(req, res) {
@@ -808,7 +820,7 @@ app.get('/api/platform/summary', platformOwnerAuth, function(req, res) {
   const tenantsCount = db.prepare('SELECT COUNT(*) as c FROM tenants').get().c;
   const revRow = db.prepare('SELECT COALESCE(SUM(total),0) as sum FROM bookings WHERE status IN (?, ?)').get('confirmed', 'completed');
   const totalRevenue = revRow ? revRow.sum : 0;
-  res.json({ studios_count: studiosCount, tenants_count: tenantsCount, total_revenue: totalRevenue, platform_commission: Math.round(totalRevenue * 0.03) });
+  res.json({ studios_count: studiosCount, tenants_count: tenantsCount, total_revenue: totalRevenue, platform_commission: 0 });
 });
 
 app.get('/api/platform/studios', platformOwnerAuth, function(req, res) {
@@ -818,7 +830,7 @@ app.get('/api/platform/studios', platformOwnerAuth, function(req, res) {
     const cntRow = db.prepare('SELECT COUNT(*) as c FROM tenants WHERE studio_id = ?').get(s.id);
     const revRow = db.prepare('SELECT COALESCE(SUM(total),0) as sum FROM bookings WHERE tenant_id IN (SELECT id FROM tenants WHERE studio_id = ?) AND status IN (?, ?)').get(s.id, 'confirmed', 'completed');
     const rev = revRow ? revRow.sum : 0;
-    return { id: s.id, subdomain: s.subdomain, name: s.name, tier: s.tier, license_key: s.license_key, commission_percent: s.commission_percent, status: s.status, created_at: s.created_at, tenants_count: cntRow ? cntRow.c : 0, revenue: rev, commission_amount: Math.round(rev * (s.commission_percent / 100)) };
+    return { id: s.id, subdomain: s.subdomain, name: s.name, tier: s.tier, license_key: s.license_key, status: s.status, created_at: s.created_at, tenants_count: cntRow ? cntRow.c : 0, revenue: rev, commission_amount: 0 };
   });
   res.json({ studios: enriched });
 });
@@ -906,59 +918,6 @@ app.patch('/api/platform/licenses/:id', platformOwnerAuth, function(req, res) {
   if (status === 'revoked') {
     platformDb.prepare('UPDATE studios SET status = ? WHERE license_key = ?').run('suspended', rec.key);
   }
-  res.json({ ok: true });
-});
-
-/* ============ БИЛЛИНГ КОМИССИИ (вручную) ============ */
-
-function billingRows(month) {
-  const revs = db.prepare("SELECT t.studio_id AS sid, COUNT(b.id) AS n, COALESCE(SUM(b.total),0) AS rev FROM bookings b JOIN tenants t ON t.id = b.tenant_id WHERE b.date LIKE ? AND b.status IN ('confirmed','completed') AND t.studio_id > 0 AND t.subdomain NOT LIKE 'demo-%' GROUP BY t.studio_id").all(month + '-%');
-  const y = parseInt(month.slice(0, 4), 10), m = parseInt(month.slice(5, 7), 10);
-  const periodStart = month + '-01', periodEnd = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
-  const rows = revs.map(function(r) {
-    const st = platformDb.prepare('SELECT id, name, tier, commission_percent FROM studios WHERE id = ?').get(r.sid) || { id: r.sid, name: '#' + r.sid, tier: '', commission_percent: 3 };
-    const pct = st.commission_percent != null ? st.commission_percent : 3;
-    const inv = platformDb.prepare('SELECT * FROM billing_invoices WHERE studio_id = ? AND period_start = ?').get(r.sid, periodStart) || null;
-    return { studio_id: r.sid, studio_name: st.name, tier: st.tier, bookings: r.n, revenue: r.rev, commission_percent: pct, amount_due: Math.round(r.rev * pct / 100), invoice: inv };
-  });
-  return { month: month, period_start: periodStart, period_end: periodEnd, rows: rows };
-}
-
-app.get('/api/platform/billing', platformOwnerAuth, function(req, res) {
-  if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
-  const month = req.query.month || new Date().toISOString().slice(0, 7);
-  if (!/^\d{4}-\d{2}$/.test(month)) return res.status(400).json({ error: 'month must be YYYY-MM' });
-  const data = billingRows(month);
-  data.total_due = data.rows.reduce(function(a, r) { return a + r.amount_due; }, 0);
-  res.json(data);
-});
-
-app.post('/api/platform/billing/generate', platformOwnerAuth, function(req, res) {
-  if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
-  const month = (req.body || {}).month;
-  if (!/^\d{4}-\d{2}$/.test(String(month))) return res.status(400).json({ error: 'month must be YYYY-MM' });
-  const data = billingRows(month);
-  let created = 0, updated = 0;
-  data.rows.forEach(function(r) {
-    if (r.revenue <= 0) return;
-    if (!r.invoice) {
-      platformDb.prepare('INSERT INTO billing_invoices (studio_id, period_start, period_end, total_revenue, commission_percent, amount_due, paid, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)').run(r.studio_id, data.period_start, data.period_end, r.revenue, r.commission_percent, r.amount_due, new Date().toISOString());
-      created++;
-    } else if (!r.invoice.paid) {
-      platformDb.prepare('UPDATE billing_invoices SET total_revenue = ?, commission_percent = ?, amount_due = ? WHERE id = ?').run(r.revenue, r.commission_percent, r.amount_due, r.invoice.id);
-      updated++;
-    }
-  });
-  res.json({ ok: true, created: created, updated: updated });
-});
-
-app.patch('/api/platform/billing/:id', platformOwnerAuth, function(req, res) {
-  if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
-  const body = req.body || {};
-  const rec = platformDb.prepare('SELECT * FROM billing_invoices WHERE id = ?').get(req.params.id);
-  if (!rec) return res.status(404).json({ error: 'not found' });
-  const paid = body.paid ? 1 : 0;
-  platformDb.prepare('UPDATE billing_invoices SET paid = ?, paid_at = ?, payment_method = ?, notes = ? WHERE id = ?').run(paid, paid ? new Date().toISOString() : null, body.payment_method !== undefined ? String(body.payment_method).slice(0, 100) : rec.payment_method, body.notes !== undefined ? String(body.notes).slice(0, 500) : rec.notes, rec.id);
   res.json({ ok: true });
 });
 
