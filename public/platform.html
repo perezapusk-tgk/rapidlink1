@@ -19,6 +19,7 @@
 .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
 .gen-result { background: var(--ok-dim); border: 1px solid var(--ok); border-radius: 12px; padding: 16px; margin-top: 14px; }
 .gen-result .key-line { font-family: 'JetBrains Mono', monospace; font-size: 0.84rem; color: var(--fg); padding: 4px 0; word-break: break-all; }
+.badge-warn { background: var(--warn-dim); color: var(--warn); border: 1px solid var(--warn); }
 </style>
 </head>
 <body>
@@ -26,7 +27,7 @@
 <div class="container">
 
   <div id="loginView" style="max-width:420px;margin:60px auto 0;">
-    <h1>Rapid<span style="color:var(--accent);">Link</span></h1>
+    <h1>Torclix<span style="color:var(--accent);"> Backups</span></h1>
     <p style="color:var(--fg-dim);margin:6px 0 24px;font-size:0.9rem;">Панель владельца платформы</p>
     <div class="card">
       <div class="field">
@@ -80,11 +81,21 @@
 
     <div class="tabs">
       <button class="tab active" data-tab="studios">Студии</button>
+      <button class="tab" data-tab="tenants">Клиенты</button>
       <button class="tab" data-tab="licenses">Лицензии</button>
     </div>
 
     <div id="tab-studios">
       <div id="studiosWrap">
+        <div class="empty">
+          <div class="empty-icon">📭</div>
+          <div class="empty-title">Загружаем…</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-tenants" style="display:none;">
+      <div id="tenantsWrap">
         <div class="empty">
           <div class="empty-icon">📭</div>
           <div class="empty-title">Загружаем…</div>
@@ -103,12 +114,19 @@
 
     <div class="msg" id="mainMsg"></div>
   </div>
-</div><script>
+</div>
+
+<script>
 const API = '';
 let token = '';
 let allLicenses = [];
 
 function rub(n) { return (n || 0).toLocaleString('ru-RU') + ' ₽'; }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
 
 async function api(path, opts) {
   opts = opts || {};
@@ -155,8 +173,10 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
     tab.classList.add('active');
     document.getElementById('tab-studios').style.display = (tab.dataset.tab === 'studios') ? '' : 'none';
+    document.getElementById('tab-tenants').style.display = (tab.dataset.tab === 'tenants') ? '' : 'none';
     document.getElementById('tab-licenses').style.display = (tab.dataset.tab === 'licenses') ? '' : 'none';
     if (tab.dataset.tab === 'licenses') loadLicenses();
+    if (tab.dataset.tab === 'tenants') loadTenants();
   });
 });
 
@@ -206,17 +226,17 @@ async function loadStudios() {
     const tierName = tierNames[s.tier] || s.tier;
     div.innerHTML =
       '<div class="info">' +
-        '<div class="name">' + (s.name || ('Студия #' + s.id)) + '<span class="badge ' + tierClass + '">' + tierName + '</span></div>' +
-        '<div class="license-key">' + (s.license_key || '') + '</div>' +
+        '<div class="name">' + esc(s.name || ('Студия #' + s.id)) + '<span class="badge ' + tierClass + '">' + esc(tierName) + '</span></div>' +
+        '<div class="license-key">' + esc(s.license_key || '') + '</div>' +
         '<div class="stats-row">' +
           '<div class="stat-mini"><span class="lbl">Клиентов</span><span class="val">' + s.tenants_count + '</span></div>' +
           '<div class="stat-mini"><span class="lbl">Оборот</span><span class="val">' + rub(s.revenue) + '</span></div>' +
           '<div class="stat-mini"><span class="lbl">Ваш 3%</span><span class="val ok">' + rub(s.commission_amount) + '</span></div>' +
-          '<div class="stat-mini"><span class="lbl">Статус</span><span class="val"><span class="badge badge-' + (s.status === 'active' ? 'ok' : 'danger') + '">' + s.status + '</span></span></div>' +
+          '<div class="stat-mini"><span class="lbl">Статус</span><span class="val"><span class="badge badge-' + (s.status === 'active' ? 'ok' : 'danger') + '">' + esc(s.status) + '</span></span></div>' +
         '</div>' +
       '</div>' +
       '<div class="actions">' +
-        '<button class="btn btn-small btn-ghost" data-copy-license="' + (s.license_key || '') + '">Copy ключ</button>' +
+        '<button class="btn btn-small btn-ghost" data-copy-license="' + esc(s.license_key || '') + '">Copy ключ</button>' +
       '</div>';
     wrap.appendChild(div);
   });
@@ -230,7 +250,78 @@ async function loadStudios() {
       }).catch(function() { alert(key); });
     });
   });
-}async function loadLicenses() {
+}
+
+async function loadTenants() {
+  const wrap = document.getElementById('tenantsWrap');
+  wrap.innerHTML = '<div class="empty"><div class="empty-title">Загружаем…</div></div>';
+  let res;
+  try {
+    res = await api('/api/platform/tenants');
+  } catch (e) {
+    if (e.status === 401) { document.getElementById('logoutBtn').click(); return; }
+    wrap.innerHTML = '<div class="empty"><div class="empty-title">Не удалось загрузить</div></div>';
+    return;
+  }
+  const list = res.tenants || [];
+  if (!list.length) {
+    wrap.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">Клиентов пока нет</div><div>Создайте студию и клиента в панели студии.</div></div>';
+    return;
+  }
+  const STATUS_BADGE = { active: 'badge-ok', pending: 'badge-warn', archived: 'badge-danger' };
+  const STATUS_LABEL = { active: 'Активен', pending: 'На паузе', archived: 'В архиве' };
+  wrap.innerHTML = '';
+  list.forEach(function(t) {
+    const div = document.createElement('div');
+    div.className = 'studio-card';
+    div.innerHTML =
+      '<div class="info">' +
+        '<div class="name">' + esc(t.business_name || ('Клиент #' + t.id)) +
+          ' <span class="badge ' + (STATUS_BADGE[t.status] || 'badge-accent') + '">' + esc(STATUS_LABEL[t.status] || t.status) + '</span>' +
+          ' <span class="badge badge-accent">' + esc(t.vertical_code || 'wash') + '</span>' +
+        '</div>' +
+        '<div class="license-key">' + esc(t.subdomain || '') + '</div>' +
+        '<div class="stats-row">' +
+          '<div class="stat-mini"><span class="lbl">Студия</span><span class="val">' + esc(t.studio_name || '—') + '</span></div>' +
+          '<div class="stat-mini"><span class="lbl">Контакт</span><span class="val">' + esc(t.contact_name || '—') + '</span></div>' +
+          '<div class="stat-mini"><span class="lbl">Телефон</span><span class="val">' + esc(t.contact_phone || '—') + '</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap;">' +
+        (t.status === 'active'
+          ? '<button class="btn btn-small btn-ghost" data-pause="' + t.id + '">На паузу</button>'
+          : '<button class="btn btn-small btn-ghost" data-activate="' + t.id + '">Активировать</button>') +
+        '<button class="btn btn-small btn-danger" data-delete="' + t.id + '">Удалить</button>' +
+      '</div>';
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('button[data-pause]').forEach(function(b) {
+    b.addEventListener('click', async function() {
+      if (!confirm('Поставить сайт на паузу? Клиенты не смогут записаться.')) return;
+      b.disabled = true;
+      try { await api('/api/platform/tenants/' + b.dataset.pause, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: 'pending' }) }); loadTenants(); }
+      catch (e) { alert('Ошибка: ' + e.message); b.disabled = false; }
+    });
+  });
+  wrap.querySelectorAll('button[data-activate]').forEach(function(b) {
+    b.addEventListener('click', async function() {
+      b.disabled = true;
+      try { await api('/api/platform/tenants/' + b.dataset.activate, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: 'active' }) }); loadTenants(); }
+      catch (e) { alert('Ошибка: ' + e.message); b.disabled = false; }
+    });
+  });
+  wrap.querySelectorAll('button[data-delete]').forEach(function(b) {
+    b.addEventListener('click', async function() {
+      if (!confirm('УДАЛИТЬ сайт навсегда? Все записи, услуги и сотрудники будут удалены.')) return;
+      if (!confirm('Точно? Это необратимо.')) return;
+      b.disabled = true;
+      try { await api('/api/platform/tenants/' + b.dataset.delete, { method: 'DELETE' }); loadTenants(); loadSummary(); }
+      catch (e) { alert('Ошибка: ' + e.message); b.disabled = false; }
+    });
+  });
+}
+
+async function loadLicenses() {
   const wrap = document.getElementById('licensesWrap');
   wrap.innerHTML = '<div class="empty"><div class="empty-title">Загружаем…</div></div>';
   let res;
@@ -246,9 +337,9 @@ async function loadStudios() {
   html += '<p style="color:var(--fg-dim2);font-size:0.82rem;margin-bottom:14px;">Создайте пакет ключей для продажи студиям.</p>';
   html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">';
   html += '<select id="genTier" class="input" style="flex:1;min-width:150px;">';
-  html += '<option value="start">Start — 200 000 ₽</option>';
-  html += '<option value="business">Business — 500 000 ₽</option>';
-  html += '<option value="enterprise">Enterprise — 1 000 000 ₽</option>';
+  html += '<option value="start">Start — 120 000 ₽</option>';
+  html += '<option value="business">Business — 350 000 ₽</option>';
+  html += '<option value="enterprise">Enterprise — 600 000 ₽</option>';
   html += '</select>';
   html += '<input id="genCount" class="input" type="number" value="1" min="1" max="100" style="width:100px;">';
   html += '<button class="btn" id="genBtn">Сгенерировать</button>';
@@ -268,11 +359,11 @@ async function loadStudios() {
     const limit = l.max_tenants > 0 ? l.max_tenants + ' кл.' : '∞';
     const studioName = l.studio_name || '—';
     html += '<tr>' +
-      '<td><span class="mono">' + l.key + '</span><button class="copy-btn" data-copy="' + l.key + '" style="margin-left:6px;">Copy</button></td>' +
-      '<td><span class="badge badge-' + l.tier + '">' + tierName + '</span></td>' +
-      '<td><span class="badge badge-' + (l.status === 'active' ? 'ok' : (l.status === 'revoked' ? 'danger' : 'accent')) + '">' + l.status + '</span></td>' +
-      '<td>' + studioName + '</td>' +
-      '<td>' + limit + '</td>' +
+      '<td><span class="mono">' + esc(l.key) + '</span><button class="copy-btn" data-copy="' + esc(l.key) + '" style="margin-left:6px;">Copy</button></td>' +
+      '<td><span class="badge badge-' + esc(l.tier) + '">' + esc(tierName) + '</span></td>' +
+      '<td><span class="badge badge-' + (l.status === 'active' ? 'ok' : (l.status === 'revoked' ? 'danger' : 'accent')) + '">' + esc(l.status) + '</span></td>' +
+      '<td>' + esc(studioName) + '</td>' +
+      '<td>' + esc(limit) + '</td>' +
       '<td>' +
         (l.status === 'active' ? '<button class="btn btn-small btn-danger" data-revoke="' + l.id + '">Отозвать</button>' :
         (l.status === 'revoked' ? '<button class="btn btn-small btn-ghost" data-restore="' + l.id + '">Восстановить</button>' :
@@ -298,7 +389,7 @@ async function loadStudios() {
       msg.className = 'msg ok';
       msg.textContent = '✓ Создано ' + r.count + ' лицензий';
       resultWrap.innerHTML = '<div class="gen-result">' +
-        r.keys.map(function(k) { return '<div class="key-line">' + k + '</div>'; }).join('') +
+        r.keys.map(function(k) { return '<div class="key-line">' + esc(k) + '</div>'; }).join('') +
         '</div><div style="color:var(--fg-dim2);font-size:0.78rem;margin-top:8px;">Скопируйте ключи и передайте покупателю.</div>';
       loadLicenses();
       loadSummary();
