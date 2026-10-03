@@ -279,99 +279,133 @@
     });
   }
 
+  function renderTenantCard(t, isArchived) {
+    var isDemo = String(t.subdomain).indexOf('demo-') === 0;
+    var u = urlsFor(t.subdomain);
+    var html = '<div class="card" style="' + (isArchived ? 'opacity:.7;' : '') + '">';
+    html += '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;">';
+    html += '<div style="flex:1;min-width:220px;">';
+    html += '<div style="font-weight:700;font-size:1rem;margin-bottom:4px;">' + esc(t.business_name);
+    html += ' <span class="badge badge-accent">' + esc(t.vertical_code) + '</span>';
+    if (isDemo) html += ' <span class="badge badge-warn">ДЕМО</span>';
+    if (isArchived) html += ' <span class="badge badge-danger">В АРХИВЕ</span>';
+    html += '</div>';
+    html += '<div style="font-size:0.82rem;color:var(--fg-dim);">' + esc((t.contact_name ? t.contact_name + ' · ' : '') + (t.contact_phone || '')) + '</div>';
+    html += '<div style="font-family:monospace;font-size:0.78rem;color:var(--accent);margin-top:6px;word-break:break-all;">' + esc(u.site) + '</div>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;">';
+    if (!isArchived) {
+      html += '<button class="btn btn-small btn-ghost" type="button" data-copy="' + esc(u.site) + '">Сайт</button>';
+      html += '<button class="btn btn-small btn-ghost" type="button" data-copy="' + esc(u.admin) + '">Админка</button>';
+      html += '<button class="btn btn-small btn-ghost" type="button" data-cred="' + esc(t.id) + '">Доступы</button>';
+      html += '<button class="btn btn-small btn-ghost" type="button" data-archive="' + esc(t.id) + '">В архив</button>';
+      html += '<button class="btn btn-small btn-danger" type="button" data-delete="' + esc(t.id) + '">Удалить</button>';
+    } else {
+      html += '<button class="btn btn-small btn-ok" type="button" data-restore="' + esc(t.id) + '">Восстановить</button>';
+      html += '<button class="btn btn-small btn-danger" type="button" data-delete="' + esc(t.id) + '">Удалить</button>';
+    }
+    html += '</div></div></div>';
+    return html;
+  }
+
   function loadTenants() {
     var wrap = $('tenantsWrap');
     say($('mainMsg'), '', '');
     wrap.innerHTML = '<div class="empty"><div class="empty-title">Загружаем…</div></div>';
     return api('/api/studio/tenants').then(function (res) {
       var all = res.tenants || [];
-      var list = all.filter(function (t) { return t.status === 'active'; });
-      $('statTenants').textContent = list.length;
+      var active = all.filter(function (t) { return t.status === 'active'; });
+      var archived = all.filter(function (t) { return t.status === 'archived' || t.status === 'pending'; });
+      $('statTenants').textContent = active.length;
       renderWelcome(all);
-      if (!list.length) {
+
+      if (!all.length) {
         wrap.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Пока нет клиентов</div><div>Нажмите «+ Добавить клиента»</div></div>';
         return;
       }
-      wrap.innerHTML = '';
-      list.forEach(function (t) {
-        var isDemo = String(t.subdomain).indexOf('demo-') === 0;
-        var u = urlsFor(t.subdomain);
-        var div = document.createElement('div');
-        div.className = 'card';
-        div.innerHTML =
-          '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;">' +
-            '<div style="flex:1;min-width:220px;">' +
-              '<div style="font-weight:700;font-size:1rem;margin-bottom:4px;">' + esc(t.business_name) +
-                ' <span class="badge badge-accent">' + esc(t.vertical_code) + '</span>' +
-                (isDemo ? ' <span class="badge badge-warn">ДЕМО</span>' : '') + '</div>' +
-              '<div style="font-size:0.82rem;color:var(--fg-dim);">' + esc((t.contact_name ? t.contact_name + ' · ' : '') + (t.contact_phone || '')) + '</div>' +
-              '<div style="font-family:monospace;font-size:0.78rem;color:var(--accent);margin-top:6px;word-break:break-all;">' + esc(u.site) + '</div>' +
-            '</div>' +
-            '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;">' +
-              '<button class="btn btn-small btn-ghost" type="button" data-copy="' + esc(u.site) + '">Сайт</button>' +
-              '<button class="btn btn-small btn-ghost" type="button" data-copy="' + esc(u.admin) + '">Админка</button>' +
-              '<button class="btn btn-small btn-ghost" type="button" data-cred="' + esc(t.id) + '">Доступы</button>' +
-              '<button class="btn btn-small btn-ghost" type="button" data-archive="' + esc(t.id) + '">В архив</button>' +
-              '<button class="btn btn-small btn-danger" type="button" data-delete="' + esc(t.id) + '">Удалить</button>' +
-            '</div>' +
-          '</div>';
-        wrap.appendChild(div);
+
+      var html = '';
+      if (active.length) {
+        html += '<div style="display:flex;flex-direction:column;gap:10px;">';
+        active.forEach(function (t) { html += renderTenantCard(t, false); });
+        html += '</div>';
+      } else {
+        html += '<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Нет активных клиентов</div></div>';
+      }
+      if (archived.length) {
+        html += '<details style="margin-top:24px;background:var(--bg-sunken);border:1px solid var(--line);border-radius:14px;padding:0;overflow:hidden;">';
+        html += '<summary style="cursor:pointer;padding:16px 20px;font-weight:700;font-size:0.95rem;display:flex;justify-content:space-between;align-items:center;list-style:none;">';
+        html += '<span>📦 Архив (' + archived.length + ')</span><span style="color:var(--accent);font-size:1.2rem;">+</span>';
+        html += '</summary>';
+        html += '<div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:10px;">';
+        archived.forEach(function (t) { html += renderTenantCard(t, true); });
+        html += '</div></details>';
+      }
+      wrap.innerHTML = html;
+
+      wrap.querySelectorAll('button[data-copy]').forEach(function (c) {
+        c.addEventListener('click', function () {
+          var label = c.textContent, val = c.getAttribute('data-copy');
+          (navigator.clipboard ? navigator.clipboard.writeText(val) : Promise.reject()).then(function () {
+            c.textContent = '✓ Скопировано'; setTimeout(function () { c.textContent = label; }, 1200);
+          }).catch(function () { window.prompt('Скопируйте ссылку:', val); });
+        });
+      });
+
+      wrap.querySelectorAll('button[data-delete]').forEach(function (del) {
+        del.addEventListener('click', function () {
+          if (!confirm('УДАЛИТЬ клиента навсегда? Все записи, услуги, сотрудники и админка будут удалены.')) return;
+          if (!confirm('Точно? Это необратимо.')) return;
+          del.disabled = true;
+          api('/api/studio/tenants/' + encodeURIComponent(del.getAttribute('data-delete')) + '/force', { method: 'DELETE' })
+            .then(function () { return Promise.all([loadTenants(), loadStats()]); })
+            .catch(function (er) { alert(errText(er)); del.disabled = false; });
+        });
+      });
+
+      wrap.querySelectorAll('button[data-cred]').forEach(function (cred) {
+        cred.addEventListener('click', function () {
+          var tid = cred.getAttribute('data-cred');
+          currentCredTenantId = tid;
+          $('credMsg').textContent = '';
+          $('credNewPass').style.display = 'none';
+          api('/api/studio/tenants/' + encodeURIComponent(tid) + '/credentials').then(function (r) {
+            var u = urlsFor(r.subdomain);
+            $('credSite').textContent = u.site;
+            $('credAdmin').textContent = u.admin;
+            $('credLogin').textContent = r.login;
+            $('credModal').classList.add('show');
+          }).catch(function (er) {
+            say($('credMsg'), 'err', 'Не удалось получить доступы: ' + errText(er));
+            $('credModal').classList.add('show');
+          });
+        });
+      });
+
+      wrap.querySelectorAll('button[data-archive]').forEach(function (a) {
+        a.addEventListener('click', function () {
+          if (!confirm('Отправить клиента в архив? Его сайт перестанет работать.')) return;
+          a.disabled = true;
+          api('/api/studio/tenants/' + encodeURIComponent(a.getAttribute('data-archive')), { method: 'DELETE' })
+            .then(function () { return Promise.all([loadTenants(), loadStats()]); })
+            .catch(function (er) { alert(errText(er)); a.disabled = false; });
+        });
+      });
+
+      wrap.querySelectorAll('button[data-restore]').forEach(function (r) {
+        r.addEventListener('click', function () {
+          if (!confirm('Вернуть клиента из архива? Его сайт снова заработает.')) return;
+          r.disabled = true;
+          api('/api/studio/tenants/' + encodeURIComponent(r.getAttribute('data-restore')) + '/restore', { method: 'PATCH' })
+            .then(function () { return Promise.all([loadTenants(), loadStats()]); })
+            .catch(function (er) { alert(errText(er)); r.disabled = false; });
+        });
       });
     }).catch(function (e) {
       if (e.status === 401) return;
       wrap.innerHTML = '<div class="empty"><div class="empty-title">Не удалось загрузить: ' + esc(errText(e)) + '</div></div>';
     });
   }
-
-  $('tenantsWrap').addEventListener('click', function (e) {
-    var c = e.target.closest('button[data-copy]');
-    if (c) {
-      var label = c.textContent, val = c.getAttribute('data-copy');
-      (navigator.clipboard ? navigator.clipboard.writeText(val) : Promise.reject()).then(function () {
-        c.textContent = '✓ Скопировано'; setTimeout(function () { c.textContent = label; }, 1200);
-      }).catch(function () { window.prompt('Скопируйте ссылку:', val); });
-      return;
-    }
-
-    var del = e.target.closest('button[data-delete]');
-    if (del) {
-      if (!confirm('УДАЛИТЬ клиента навсегда? Все записи, услуги, сотрудники и админка будут удалены.')) return;
-      if (!confirm('Точно? Это необратимо.')) return;
-      del.disabled = true;
-      api('/api/studio/tenants/' + encodeURIComponent(del.getAttribute('data-delete')) + '/force', { method: 'DELETE' })
-        .then(function () { return Promise.all([loadTenants(), loadStats()]); })
-        .catch(function (er) { alert(errText(er)); del.disabled = false; });
-      return;
-    }
-
-    var cred = e.target.closest('button[data-cred]');
-    if (cred) {
-      var tid = cred.getAttribute('data-cred');
-      currentCredTenantId = tid;
-      $('credMsg').textContent = '';
-      $('credNewPass').style.display = 'none';
-      api('/api/studio/tenants/' + encodeURIComponent(tid) + '/credentials').then(function (r) {
-        var u = urlsFor(r.subdomain);
-        $('credSite').textContent = u.site;
-        $('credAdmin').textContent = u.admin;
-        $('credLogin').textContent = r.login;
-        $('credModal').classList.add('show');
-      }).catch(function (er) {
-        say($('credMsg'), 'err', 'Не удалось получить доступы: ' + errText(er));
-        $('credModal').classList.add('show');
-      });
-      return;
-    }
-
-    var a = e.target.closest('button[data-archive]');
-    if (a) {
-      if (!confirm('Отправить клиента в архив? Его сайт перестанет работать.')) return;
-      a.disabled = true;
-      api('/api/studio/tenants/' + encodeURIComponent(a.getAttribute('data-archive')), { method: 'DELETE' })
-        .then(function () { return Promise.all([loadTenants(), loadStats()]); })
-        .catch(function (er) { alert(errText(er)); a.disabled = false; });
-    }
-  });
 
   $('credCloseBtn').addEventListener('click', function () { $('credModal').classList.remove('show'); });
   $('credModal').addEventListener('click', function (e) { if (e.target === $('credModal')) $('credModal').classList.remove('show'); });
