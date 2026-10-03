@@ -11,7 +11,7 @@
 <div class="container">
 
   <div id="loginView" style="max-width:480px;margin:60px auto 0;">
-    <h1>Rapid<span style="color:var(--accent);">Link</span></h1>
+    <h1>Torclix<span style="color:var(--accent);"> Backups</span></h1>
     <p style="color:var(--fg-dim);margin:6px 0 24px;font-size:0.9rem;">Панель управления студии</p>
     <div class="card">
       <div class="field">
@@ -31,7 +31,7 @@
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px;">
         <a href="#" id="welcomeClientLink" target="_blank" rel="noopener" class="card" style="text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:12px;padding:14px;">
           <span style="font-size:1.6rem;">🌐</span>
-          <span><span style="display:block;font-size:0.72rem;color:var(--fg-dim2);">Клиентский сайт</span><span style="font-size:0.92rem;font-weight:700;">Запись на мойку</span></span>
+          <span><span style="display:block;font-size:0.72rem;color:var(--fg-dim2);">Клиентский сайт</span><span style="font-size:0.92rem;font-weight:700;">Запись</span></span>
         </a>
         <a href="#" id="welcomeAdminLink" target="_blank" rel="noopener" class="card" style="text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:12px;padding:14px;">
           <span style="font-size:1.6rem;">🔐</span>
@@ -124,18 +124,44 @@
   </div>
 </div>
 
+<div class="modal-bg" id="credModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="credTitle">
+    <h2 id="credTitle" style="margin-bottom:18px;">Доступы клиента</h2>
+    <div id="credContent">
+      <div style="background:var(--bg-sunken);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Название</div>
+        <div style="font-size:0.95rem;color:var(--fg);margin-bottom:12px;" id="credName">—</div>
+        <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Сайт клиента</div>
+        <div style="font-family:monospace;font-size:0.88rem;color:var(--accent);margin-bottom:12px;word-break:break-all;" id="credSite">—</div>
+        <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Админка</div>
+        <div style="font-family:monospace;font-size:0.88rem;color:var(--accent);margin-bottom:12px;word-break:break-all;" id="credAdmin">—</div>
+        <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Логин админки</div>
+        <div style="font-family:monospace;font-size:0.95rem;color:var(--fg);margin-bottom:12px;" id="credLogin">—</div>
+        <div style="font-size:0.78rem;color:var(--fg-dim2);">Пароль хранится в зашифрованном виде. Если забыли — сбросьте ниже.</div>
+      </div>
+      <div id="credNewPass" style="display:none;background:var(--ok-dim);border:1px solid var(--ok);border-radius:10px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Новый пароль (показывается один раз)</div>
+        <div style="font-family:monospace;font-size:1rem;color:var(--fg);word-break:break-all;" id="credNewPassVal">—</div>
+      </div>
+      <div class="msg" id="credMsg" role="alert"></div>
+      <div class="row row-narrow mt-2">
+        <button class="btn btn-ghost" id="credCloseBtn" type="button">Закрыть</button>
+        <button class="btn btn-danger" id="credResetBtn" type="button">Сбросить пароль</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   'use strict';
 
-  // Базовый домен для клиентов. На нём клиенты открываются по поддомену (mywash.Torclix Backups.ru).
-  // На любом другом хосте (например *.onrender.com) используется ссылка вида /?tenant=mywash.
-  var BASE_DOMAIN = 'Torclix Backups.ru';
+  var BASE_DOMAIN = 'rapidlink.ru';
 
   var $ = function (id) { return document.getElementById(id); };
   var token = '', studio = null, verticals = [];
+  var currentCredTenantId = null;
 
-  // localStorage может быть недоступен (приватный режим): не даём этому ломать вход
   var store = {
     get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
@@ -201,7 +227,6 @@
     $('licenseKey').value = '';
   }
 
-  /* ---------- вход ---------- */
   function doLogin() {
     var key = $('licenseKey').value.trim().toUpperCase();
     var msg = $('loginMsg'), btn = $('loginBtn');
@@ -224,12 +249,11 @@
   $('licenseKey').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
   $('logoutBtn').addEventListener('click', logout);
 
-  /* ---------- главный экран ---------- */
   function showMain() {
     $('loginView').style.display = 'none';
     $('mainView').style.display = '';
     $('studioName').textContent = studio.name || ('Студия #' + studio.id);
-    var tierNames = { start: 'Start', business: 'Business', enterprise: 'Premium' };
+    var tierNames = { start: 'Start', business: 'Business', enterprise: 'Enterprise' };
     var tierEl = $('studioTier');
     tierEl.textContent = tierNames[studio.tier] || studio.tier;
     tierEl.className = 'badge badge-' + studio.tier;
@@ -292,6 +316,7 @@
             '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;">' +
               '<button class="btn btn-small btn-ghost" type="button" data-copy="' + esc(u.site) + '">Сайт</button>' +
               '<button class="btn btn-small btn-ghost" type="button" data-copy="' + esc(u.admin) + '">Админка</button>' +
+              '<button class="btn btn-small btn-ghost" type="button" data-cred="' + esc(t.id) + '">Доступы</button>' +
               '<button class="btn btn-small btn-danger" type="button" data-archive="' + esc(t.id) + '">В архив</button>' +
             '</div>' +
           '</div>';
@@ -303,7 +328,6 @@
     });
   }
 
-  // Делегирование кликов по списку клиентов
   $('tenantsWrap').addEventListener('click', function (e) {
     var c = e.target.closest('button[data-copy]');
     if (c) {
@@ -313,6 +337,34 @@
       }).catch(function () { window.prompt('Скопируйте ссылку:', val); });
       return;
     }
+
+    var cred = e.target.closest('button[data-cred]');
+    if (cred) {
+      var tid = cred.getAttribute('data-cred');
+      currentCredTenantId = tid;
+      var all = [];
+      var tenants = document.querySelectorAll('#tenantsWrap .card');
+      var current = null;
+      for (var i = 0; i < tenants.length; i++) {
+        var btn = tenants[i].querySelector('button[data-cred="' + tid + '"]');
+        if (btn) { current = tenants[i]; break; }
+      }
+      $('credName').textContent = current ? (current.querySelector('div[style*="font-weight:700"]') ? current.querySelector('div[style*="font-weight:700"]').textContent.trim() : '—') : '—';
+      $('credMsg').textContent = '';
+      $('credNewPass').style.display = 'none';
+      api('/api/studio/tenants/' + encodeURIComponent(tid) + '/credentials').then(function (r) {
+        var u = urlsFor(r.subdomain);
+        $('credSite').textContent = u.site;
+        $('credAdmin').textContent = u.admin;
+        $('credLogin').textContent = r.login;
+        $('credModal').classList.add('show');
+      }).catch(function (er) {
+        say($('credMsg'), 'err', 'Не удалось получить доступы: ' + errText(er));
+        $('credModal').classList.add('show');
+      });
+      return;
+    }
+
     var a = e.target.closest('button[data-archive]');
     if (a) {
       if (!confirm('Отправить клиента в архив? Его сайт перестанет работать.')) return;
@@ -323,7 +375,25 @@
     }
   });
 
-  /* ---------- приветствие с демо ---------- */
+  $('credCloseBtn').addEventListener('click', function () { $('credModal').classList.remove('show'); });
+  $('credModal').addEventListener('click', function (e) { if (e.target === $('credModal')) $('credModal').classList.remove('show'); });
+
+  $('credResetBtn').addEventListener('click', function () {
+    if (!currentCredTenantId) return;
+    if (!confirm('Сбросить пароль админки? Старый пароль перестанет работать.')) return;
+    var btn = $('credResetBtn');
+    btn.disabled = true;
+    say($('credMsg'), '', 'Сбрасываем…');
+    api('/api/studio/tenants/' + encodeURIComponent(currentCredTenantId) + '/reset-password', { method: 'POST' })
+      .then(function (r) {
+        $('credNewPassVal').textContent = r.password;
+        $('credNewPass').style.display = '';
+        say($('credMsg'), 'ok', 'Пароль сброшен. Сохраните его сейчас.');
+      })
+      .catch(function (er) { say($('credMsg'), 'err', 'Ошибка: ' + errText(er)); })
+      .then(function () { btn.disabled = false; });
+  });
+
   function renderWelcome(all) {
     if (store.get('studio_welcome_' + studio.id)) return;
     var demo = all.filter(function (t) { return String(t.subdomain).indexOf('demo-') === 0; })[0];
@@ -340,7 +410,6 @@
     if (studio) store.set('studio_welcome_' + studio.id, '1');
   });
 
-  /* ---------- добавление клиента ---------- */
   function cleanSub(v) { return v.trim().toLowerCase().replace(/[^a-z0-9-]/g, ''); }
   function updatePreview() {
     var v = cleanSub($('newSubdomain').value) || 'mywash';
@@ -384,7 +453,6 @@
     }).then(function () { btn.disabled = false; btn.textContent = 'Создать клиента'; });
   });
 
-  /* ---------- восстановление сессии ---------- */
   var savedToken = store.get('studio_token'), savedData = store.get('studio_data');
   if (savedToken && savedData) {
     try { studio = JSON.parse(savedData); token = savedToken; } catch (e) { studio = null; token = ''; }
