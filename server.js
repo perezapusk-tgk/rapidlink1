@@ -921,6 +921,38 @@ app.patch('/api/platform/licenses/:id', platformOwnerAuth, function(req, res) {
   res.json({ ok: true });
 });
 
+/* ============ УДАЛЕНИЕ ЛИЦЕНЗИЙ ============ */
+app.delete('/api/platform/licenses/:id', platformOwnerAuth, function(req, res) {
+  if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
+  const rec = platformDb.prepare('SELECT * FROM licenses WHERE id = ?').get(req.params.id);
+  if (!rec) return res.status(404).json({ error: 'not_found' });
+  if (rec.status === 'active') return res.status(400).json({ error: 'license_is_active' });
+  platformDb.prepare('DELETE FROM licenses WHERE id = ?').run(rec.id);
+  res.json({ ok: true });
+});
+
+/* ============ УДАЛЕНИЕ СТУДИЙ ============ */
+app.delete('/api/platform/studios/:id', platformOwnerAuth, function(req, res) {
+  if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
+  const rec = platformDb.prepare('SELECT * FROM studios WHERE id = ?').get(req.params.id);
+  if (!rec) return res.status(404).json({ error: 'not_found' });
+  const tenantCount = db.prepare('SELECT COUNT(*) as c FROM tenants WHERE studio_id = ?').get(rec.id);
+  if (tenantCount && tenantCount.c > 0) {
+    return res.status(400).json({ error: 'studio_has_tenants', count: tenantCount.c });
+  }
+  platformDb.prepare('UPDATE licenses SET studio_id = NULL WHERE studio_id = ?').run(rec.id);
+  platformDb.prepare('DELETE FROM studios WHERE id = ?').run(rec.id);
+  res.json({ ok: true });
+});
+
 /* ============ ЗАПУСК ============ */
+let backupMod = null;
+try {
+  backupMod = require('./backup');
+  backupMod.start({ db: db, platformDb: platformDb });
+} catch (e) {
+  console.error('backup:', e.message);
+}
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Torclix Backups listening on', PORT));
