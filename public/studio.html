@@ -60,7 +60,7 @@
     <div class="stats">
       <div class="stat"><div class="stat-icon">👥</div><div class="lbl">Клиентов</div><div class="val accent" id="statTenants">0</div></div>
       <div class="stat"><div class="stat-icon">💰</div><div class="lbl">Оборот клиентов</div><div class="val" id="statRevenue">—</div></div>
-      <div class="stat stat-ok"><div class="stat-icon">📊</div><div class="lbl" id="statCommissionLbl">Комиссия</div><div class="val ok" id="statCommission">—</div></div>
+      <div class="stat stat-ok"><div class="stat-icon">📅</div><div class="lbl">Записей всего</div><div class="val ok" id="statBookings">0</div></div>
     </div>
 
     <div class="flex-between mb-2" style="flex-wrap:wrap;gap:10px;">
@@ -129,8 +129,6 @@
     <h2 id="credTitle" style="margin-bottom:18px;">Доступы клиента</h2>
     <div id="credContent">
       <div style="background:var(--bg-sunken);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;">
-        <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Название</div>
-        <div style="font-size:0.95rem;color:var(--fg);margin-bottom:12px;" id="credName">—</div>
         <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Сайт клиента</div>
         <div style="font-family:monospace;font-size:0.88rem;color:var(--accent);margin-bottom:12px;word-break:break-all;" id="credSite">—</div>
         <div style="font-size:0.75rem;color:var(--fg-dim2);margin-bottom:4px;">Админка</div>
@@ -260,8 +258,6 @@
     var maxT = studio.max_tenants > 0 ? studio.max_tenants : '∞';
     var maxV = studio.max_verticals > 0 ? studio.max_verticals : '∞';
     $('studioLimits').textContent = 'до ' + maxT + ' клиентов · ' + maxV + ' вертикалей';
-    var pct = studio.commission_percent != null ? studio.commission_percent : 3;
-    $('statCommissionLbl').textContent = 'Комиссия ' + pct + '%';
     return Promise.all([loadVerticals(), loadTenants(), loadStats()]);
   }
 
@@ -277,11 +273,9 @@
   function loadStats() {
     return api('/api/studio/stats').then(function (s) {
       $('statRevenue').textContent = rub(s.revenue_total);
-      $('statCommission').textContent = rub(s.commission_total);
-      var l = $('statCommissionLbl');
-      l.textContent = 'Комиссия ' + s.commission_percent + '% · за месяц ' + rub(s.commission_month);
+      $('statBookings').textContent = s.bookings_total;
     }).catch(function () {
-      $('statRevenue').textContent = '—'; $('statCommission').textContent = '—';
+      $('statRevenue').textContent = '—'; $('statBookings').textContent = '—';
     });
   }
 
@@ -317,7 +311,8 @@
               '<button class="btn btn-small btn-ghost" type="button" data-copy="' + esc(u.site) + '">Сайт</button>' +
               '<button class="btn btn-small btn-ghost" type="button" data-copy="' + esc(u.admin) + '">Админка</button>' +
               '<button class="btn btn-small btn-ghost" type="button" data-cred="' + esc(t.id) + '">Доступы</button>' +
-              '<button class="btn btn-small btn-danger" type="button" data-archive="' + esc(t.id) + '">В архив</button>' +
+              '<button class="btn btn-small btn-ghost" type="button" data-archive="' + esc(t.id) + '">В архив</button>' +
+              '<button class="btn btn-small btn-danger" type="button" data-delete="' + esc(t.id) + '">Удалить</button>' +
             '</div>' +
           '</div>';
         wrap.appendChild(div);
@@ -338,18 +333,21 @@
       return;
     }
 
+    var del = e.target.closest('button[data-delete]');
+    if (del) {
+      if (!confirm('УДАЛИТЬ клиента навсегда? Все записи, услуги, сотрудники и админка будут удалены.')) return;
+      if (!confirm('Точно? Это необратимо.')) return;
+      del.disabled = true;
+      api('/api/studio/tenants/' + encodeURIComponent(del.getAttribute('data-delete')) + '/force', { method: 'DELETE' })
+        .then(function () { return Promise.all([loadTenants(), loadStats()]); })
+        .catch(function (er) { alert(errText(er)); del.disabled = false; });
+      return;
+    }
+
     var cred = e.target.closest('button[data-cred]');
     if (cred) {
       var tid = cred.getAttribute('data-cred');
       currentCredTenantId = tid;
-      var all = [];
-      var tenants = document.querySelectorAll('#tenantsWrap .card');
-      var current = null;
-      for (var i = 0; i < tenants.length; i++) {
-        var btn = tenants[i].querySelector('button[data-cred="' + tid + '"]');
-        if (btn) { current = tenants[i]; break; }
-      }
-      $('credName').textContent = current ? (current.querySelector('div[style*="font-weight:700"]') ? current.querySelector('div[style*="font-weight:700"]').textContent.trim() : '—') : '—';
       $('credMsg').textContent = '';
       $('credNewPass').style.display = 'none';
       api('/api/studio/tenants/' + encodeURIComponent(tid) + '/credentials').then(function (r) {
