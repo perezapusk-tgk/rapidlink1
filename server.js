@@ -741,6 +741,13 @@ app.delete('/api/studio/tenants/:id/force', studioAuth, function(req, res) {
   res.json({ ok: true });
 });
 
+app.patch('/api/studio/tenants/:id/restore', studioAuth, function(req, res) {
+  const rec = db.prepare('SELECT * FROM tenants WHERE id = ? AND studio_id = ?').get(req.params.id, req.studio.studio_id);
+  if (!rec) return res.status(404).json({ error: 'not found' });
+  db.prepare('UPDATE tenants SET status = ? WHERE id = ?').run('active', rec.id);
+  res.json({ ok: true });
+});
+
 app.post('/api/studio/tenants', studioAuth, function(req, res) {
   if (!platformDb) return res.status(503).json({ error: 'platform_not_ready' });
   const sid = req.studio.studio_id;
