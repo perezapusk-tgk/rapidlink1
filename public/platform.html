@@ -228,6 +228,8 @@ async function loadStudios() {
     div.className = 'studio-card';
     const tierClass = 'badge-' + (s.tier || 'start');
     const tierName = tierNames[s.tier] || s.tier;
+    const statusBadge = s.status === 'active' ? 'ok' : (s.status === 'suspended' ? 'danger' : 'warn');
+    const statusLabel = { active: 'ACTIVE', suspended: 'SUSPENDED', archived: 'ARCHIVED' }[s.status] || s.status;
     div.innerHTML =
       '<div class="info">' +
         '<div class="name">' + esc(s.name || ('Студия #' + s.id)) + '<span class="badge ' + tierClass + '">' + esc(tierName) + '</span></div>' +
@@ -235,14 +237,19 @@ async function loadStudios() {
         '<div class="stats-row">' +
           '<div class="stat-mini"><span class="lbl">Клиентов</span><span class="val">' + s.tenants_count + '</span></div>' +
           '<div class="stat-mini"><span class="lbl">Оборот</span><span class="val">' + rub(s.revenue) + '</span></div>' +
-          '<div class="stat-mini"><span class="lbl">Статус</span><span class="val"><span class="badge badge-' + (s.status === 'active' ? 'ok' : 'danger') + '">' + esc(s.status) + '</span></span></div>' +
+          '<div class="stat-mini"><span class="lbl">Статус</span><span class="val"><span class="badge badge-' + statusBadge + '">' + esc(statusLabel) + '</span></span></div>' +
         '</div>' +
       '</div>' +
-      '<div class="actions">' +
+      '<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap;">' +
         '<button class="btn btn-small btn-ghost" data-copy-license="' + esc(s.license_key || '') + '">Copy ключ</button>' +
+        (s.status === 'active'
+          ? '<button class="btn btn-small btn-ghost" data-suspend-studio="' + s.id + '">Приостановить</button>'
+          : '<button class="btn btn-small btn-ok" data-activate-studio="' + s.id + '">Активировать</button>') +
+        '<button class="btn btn-small btn-danger" data-del-studio="' + s.id + '">Удалить</button>' +
       '</div>';
     wrap.appendChild(div);
   });
+
   wrap.querySelectorAll('button[data-copy-license]').forEach(function(btn) {
     btn.addEventListener('click', function() {
       const key = btn.dataset.copyLicense;
@@ -251,6 +258,54 @@ async function loadStudios() {
         btn.textContent = '✓';
         setTimeout(function() { btn.textContent = 'Copy ключ'; }, 1200);
       }).catch(function() { alert(key); });
+    });
+  });
+
+  wrap.querySelectorAll('button[data-suspend-studio]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (!confirm('Приостановить студию? Она не сможет создавать новых клиентов.')) return;
+      btn.disabled = true;
+      try {
+        await api('/api/platform/studios/' + btn.dataset.suspendStudio, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'suspended' })
+        });
+        loadStudios();
+      } catch (e) { alert('Ошибка: ' + (e.message || 'неизвестно')); btn.disabled = false; }
+    });
+  });
+
+  wrap.querySelectorAll('button[data-activate-studio]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      btn.disabled = true;
+      try {
+        await api('/api/platform/studios/' + btn.dataset.activateStudio, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'active' })
+        });
+        loadStudios();
+      } catch (e) { alert('Ошибка: ' + (e.message || 'неизвестно')); btn.disabled = false; }
+    });
+  });
+
+  wrap.querySelectorAll('button[data-del-studio]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (!confirm('Удалить студию навсегда? Если у неё есть клиенты — удалить не получится.')) return;
+      btn.disabled = true;
+      try {
+        await api('/api/platform/studios/' + btn.dataset.delStudio, { method: 'DELETE' });
+        loadStudios();
+        loadSummary();
+      } catch (e) {
+        if (e.data && e.data.error === 'studio_has_tenants') {
+          alert('У студии есть клиенты (' + e.data.count + '). Сначала удалите их во вкладке «Клиенты».');
+        } else {
+          alert('Ошибка: ' + (e.message || 'неизвестно'));
+        }
+        btn.disabled = false;
+      }
     });
   });
 }
@@ -367,10 +422,11 @@ async function loadLicenses() {
       '<td><span class="badge badge-' + (l.status === 'active' ? 'ok' : (l.status === 'revoked' ? 'danger' : 'accent')) + '">' + esc(l.status) + '</span></td>' +
       '<td>' + esc(studioName) + '</td>' +
       '<td>' + esc(limit) + '</td>' +
-      '<td>' +
-        (l.status === 'active' ? '<button class="btn btn-small btn-danger" data-revoke="' + l.id + '">Отозвать</button>' :
-        (l.status === 'revoked' ? '<button class="btn btn-small btn-ghost" data-restore="' + l.id + '">Восстановить</button>' :
-        '<span style="color:var(--fg-dim2);font-size:0.75rem;">Не активирована</span>')) +
+      '<td style="white-space:nowrap;">' +
+        (l.status === 'active' ? '<button class="btn btn-small btn-danger" data-revoke="' + l.id + '">Отозвать</button> ' :
+        (l.status === 'revoked' ? '<button class="btn btn-small btn-ghost" data-restore="' + l.id + '">Восстановить</button> ' :
+        '<span style="color:var(--fg-dim2);font-size:0.75rem;">Не активирована</span> ')) +
+        '<button class="btn btn-small btn-danger" data-del-license="' + l.id + '" title="Удалить">✕</button>' +
       '</td>' +
     '</tr>';
   });
@@ -413,7 +469,7 @@ async function loadLicenses() {
 
   wrap.querySelectorAll('button[data-revoke]').forEach(function(btn) {
     btn.addEventListener('click', async function() {
-      if (!confirm('Отозвать лицензию?')) return;
+      if (!confirm('Отозвать лицензию? Студия, привязанная к ней, будет приостановлена.')) return;
       btn.disabled = true;
       try {
         await api('/api/platform/licenses/' + btn.dataset.revoke, {
@@ -422,6 +478,7 @@ async function loadLicenses() {
           body: JSON.stringify({ status: 'revoked' })
         });
         loadLicenses();
+        loadSummary();
       } catch (e) { alert('Ошибка: ' + e.message); btn.disabled = false; }
     });
   });
@@ -436,7 +493,24 @@ async function loadLicenses() {
           body: JSON.stringify({ status: 'issued' })
         });
         loadLicenses();
+        loadSummary();
       } catch (e) { alert('Ошибка: ' + e.message); btn.disabled = false; }
+    });
+  });
+
+  wrap.querySelectorAll('button[data-del-license]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (!confirm('Удалить лицензию навсегда? Если она активирована — удалить не получится.')) return;
+      btn.disabled = true;
+      try {
+        await api('/api/platform/licenses/' + btn.dataset.delLicense, { method: 'DELETE' });
+        loadLicenses();
+        loadSummary();
+      } catch (e) {
+        if (e.data && e.data.error === 'license_is_active') alert('Лицензия активна. Сначала отзовите её.');
+        else alert('Ошибка: ' + (e.message || 'неизвестно'));
+        btn.disabled = false;
+      }
     });
   });
 }
