@@ -1,48 +1,58 @@
-/* Torclix Backups — дополнения к styles.css. Подключается ПОСЛЕ него: <link rel="stylesheet" href="/styles-fix.css"> */
+/* ============================================================
+   Torclix Backups — доработки и переопределения
+   ============================================================ */
 
-/* родные элементы (календарь, список, прокрутка) в цвет текущей темы */
-[data-theme="dark"] { color-scheme: dark; }
-[data-theme="light"] { color-scheme: light; }
+/* Убираем синюю подсветку тапа на мобильных */
+* { -webkit-tap-highlight-color: transparent; }
 
-/* Поле без атрибута type (например, «Имя») не попадало под правила input[type="text"] и оставалось
-   белым с чёрным системным шрифтом. Приводим такие поля к общему виду. */
-input:not([type]), input[type="search"], input[type="month"], input[type="url"], input[type="datetime-local"] {
-  width: 100%;
-  padding: 11px 14px;
-  border-radius: 9px;
-  border: 1px solid var(--line);
-  background: var(--bg-sunken);
-  color: var(--fg);
-  font-size: 0.94rem;
-  font-family: inherit;
-  -webkit-appearance: none;
-  appearance: none;
-}
-input:not([type]):focus, input[type="search"]:focus, input[type="month"]:focus, input[type="url"]:focus, input[type="datetime-local"]:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: var(--shadow-glow);
-  background: var(--bg-elev);
+/* Кнопки в одну строку на мобильных не сжимаются */
+@media (max-width: 600px) {
+  .btn { padding: 10px 16px; }
+  .btn-small { padding: 7px 11px; font-size: .8rem; }
 }
 
-/* единый шрифт, цвет текста и курсор во всех полях */
-input, select, textarea { font-family: inherit; color: var(--fg); caret-color: var(--accent); }
-input::placeholder, textarea::placeholder { color: var(--fg-dim3); opacity: 1; }
-select option { background: var(--bg-elev); color: var(--fg); }
-
-/* автозаполнение браузера не должно перекрашивать поле */
-input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus,
-textarea:-webkit-autofill, select:-webkit-autofill {
-  -webkit-text-fill-color: var(--fg);
-  caret-color: var(--fg);
-  box-shadow: 0 0 0 1000px var(--bg-sunken) inset;
-  border: 1px solid var(--line);
-  transition: background-color 9999s ease-out 0s;
+/* Инпуты в .row растягиваются */
+.row > .input,
+.row > input,
+.row > select {
+  flex: 1 1 160px;
+  min-width: 0;
 }
 
-/* флажки и переключатели не растягиваются на всю ширину */
-input[type="checkbox"], input[type="radio"] { width: auto; -webkit-appearance: auto; appearance: auto; accent-color: var(--accent); }
+/* Карточки в списке клиентов студии */
+#tenantsWrap .card {
+  transition: border-color .2s;
+}
+#tenantsWrap .card:hover {
+  border-color: var(--line-2);
+}
 
-/* кнопка темы больше не лежит поверх заголовков и кнопок */
-.theme-toggle { top: auto; bottom: 88px; right: 12px; width: 38px; height: 38px; font-size: 1rem; opacity: 0.92; }
-@media (min-width: 900px) { .theme-toggle { bottom: 20px; right: 20px; } }
+/* Код бронирования */
+.mono { font-family: var(--mono); letter-spacing: .02em; }
+
+/* Модалки на мобильных */
+@media (max-width: 520px) {
+  .modal-bg { padding: 12px; align-items: flex-end; }
+  .modal {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 92vh;
+  }
+}
+
+/* Улучшенные фокусы для доступности */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Prevenrt iOS zoom on input focus */
+@media (max-width: 600px) {
+  input, select, textarea { font-size: 16px; }
+}
+
+/* Скрытые элементы */
+[hidden] { display: none !important; }
