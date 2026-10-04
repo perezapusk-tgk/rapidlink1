@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Torclix Backups — платформа онлайн-записи для бизнеса услуг</title>
-<meta name="description" content="Универсальная платформа онлайн-записи: автомойки, барбершопы, шиномонтаж, детейлинг, массаж и другие вертикали. Единоразовый платёж, без комиссии с оборота.">
+<meta name="description" content="Универсальная платформа онлайн-записи: автомойки, барбершопы, шиномонтаж, детейлинг, массаж и другие вертикали. Единоразовый платёж, без комиссии с оборота. 2 месяца обслуживания бесплатно.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -143,6 +143,8 @@ h2.title{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;font-weight:800;l
 .plan .buy:hover{border-color:var(--accent);color:var(--accent)}
 .plan.popular .buy{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#04120f;border:none;box-shadow:0 12px 34px -12px var(--accent-glow)}
 .plan.popular .buy:hover{transform:translateY(-2px)}
+.pricing-note{text-align:center;margin-top:26px;font-size:.85rem;color:var(--fg-dim2);line-height:1.6}
+.pricing-note a{color:var(--accent)}
 .steps{padding:100px 22px}
 .steps-head{text-align:center;max-width:640px;margin:0 auto 56px}
 .steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
@@ -161,6 +163,7 @@ h2.title{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;font-weight:800;l
 .faq summary::after{content:"+";font-size:1.5rem;font-weight:400;color:var(--accent);transition:transform .3s;line-height:1}
 .faq details[open] summary::after{transform:rotate(45deg)}
 .faq details p{padding:0 24px 22px;color:var(--mute);font-size:.94rem;line-height:1.65}
+.faq details p + p{padding-top:0}
 .cta-final{padding:100px 22px 120px;text-align:center}
 .cta-box{max-width:900px;margin:0 auto;border-radius:32px;padding:70px 30px;background:linear-gradient(135deg,var(--accent-glow),transparent 60%),var(--card);border:1px solid var(--line-2);position:relative;overflow:hidden}
 .cta-box::before{content:"";position:absolute;top:-50%;left:-10%;width:120%;height:200%;background:radial-gradient(circle at 30% 30%,var(--accent-glow),transparent 50%);filter:blur(60px);opacity:.6;animation:float1 16s ease-in-out infinite}
@@ -170,6 +173,7 @@ h2.title{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.15;font-weight:800;l
 footer{border-top:1px solid var(--line);padding:40px 22px;text-align:center;color:var(--mute-2);font-size:.85rem}
 footer .brand{justify-content:center;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;color:var(--ink)}
 footer a{color:var(--accent)}
+footer .links{margin-top:8px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.2,.7,.3,1),transform .8s cubic-bezier(.2,.7,.3,1)}
 .reveal.in{opacity:1;transform:none}
 </style>
@@ -210,7 +214,7 @@ footer a{color:var(--accent)}
       <div class="mockup-screen">
         <div class="m-head">
           <div class="m-title">Панель бизнеса</div>
-          <div class="m-pill">Сегодня · пример</div>
+          <div class="m-pill">Пример</div>
         </div>
         <div class="mockup-grid">
           <div class="mockup-card"><div class="lbl">Записей (пример)</div><div class="val">12</div><div class="sub">на сегодня</div></div>
@@ -261,7 +265,7 @@ footer a{color:var(--accent)}
       <div class="feature reveal"><div class="f-icon">🔒</div><h3>Шифрованные бэкапы</h3><p>Данные шифруются (AES-256) и сохраняются в Telegram каждые 10 минут. При перезапуске сервер восстанавливает всё сам.</p></div>
       <div class="feature reveal"><div class="f-icon">🚫</div><h3>Без комиссии с оборота</h3><p>Один платёж — и система ваша. Мы не берём процент с каждой записи ваших клиентов.</p></div>
       <div class="feature reveal"><div class="f-icon">🛟</div><h3>Поддержка включена</h3><p>Первый месяц поддержки — бесплатно. Поможем с настройкой, ответим на вопросы, решим проблемы.</p></div>
-      <div class="feature reveal"><div class="f-icon">🎁</div><h3>2 месяца обслуживания</h3><p>При покупке любого тарифа — 2 месяца полного обслуживания в подарок.</p></div>
+      <div class="feature reveal"><div class="f-icon">🎁</div><h3>2 месяца обслуживания</h3><p>При покупке любого тарифа — 2 месяца полного обслуживания в подарок. Дальше — оплата сразу или рассрочка.</p></div>
     </div>
   </div>
 </section>
@@ -293,7 +297,7 @@ footer a{color:var(--accent)}
     <div class="pricing-head reveal">
       <div class="eyebrow">Тарифы</div>
       <h2 class="title">Один платёж — без комиссии</h2>
-      <p class="lead">Купили один раз — пользуетесь без ежемесячных списаний и без процента с оборота. Обслуживание и поддержка включены.</p>
+      <p class="lead">Купили один раз — пользуетесь без ежемесячных списаний и без процента с оборота. Первые 2 месяца обслуживания — бесплатно.</p>
     </div>
     <div class="plans">
       <div class="plan reveal">
@@ -304,6 +308,7 @@ footer a{color:var(--accent)}
         <div class="p-perks">
           <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2 месяца обслуживания бесплатно</div>
           <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 месяц поддержки бесплатно</div>
+          <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Оплата сразу или рассрочка</div>
         </div>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>До 10 клиентов</li>
@@ -323,6 +328,7 @@ footer a{color:var(--accent)}
         <div class="p-perks">
           <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2 месяца обслуживания бесплатно</div>
           <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 месяц поддержки бесплатно</div>
+          <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Оплата сразу или рассрочка</div>
         </div>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>До 100 клиентов</li>
@@ -341,6 +347,7 @@ footer a{color:var(--accent)}
         <div class="p-perks">
           <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2 месяца обслуживания бесплатно</div>
           <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 месяц поддержки бесплатно</div>
+          <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Оплата сразу или рассрочка</div>
         </div>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Без ограничений</li>
@@ -352,6 +359,9 @@ footer a{color:var(--accent)}
         <a class="buy" href="https://t.me/nikita_seton" target="_blank" rel="noopener">Купить Enterprise</a>
       </div>
     </div>
+    <p class="pricing-note reveal">
+      Оплата означает согласие с <a href="/oferta.html" target="_blank">условиями публичной оферты</a>. После оплаты выдаём чек через приложение «Мой налог».
+    </p>
   </div>
 </section>
 
@@ -381,8 +391,13 @@ footer a{color:var(--accent)}
     <details class="reveal"><summary>Нужен ли свой сервер или программист?</summary><p>Нет. Платформа работает в облаке. Вам нужен только браузер на телефоне или компьютере. Все обновления и резервные копии — на нашей стороне.</p></details>
     <details class="reveal"><summary>Что с данными моих клиентов?</summary><p>Базы данных шифруются (AES-256) и резервируются каждые 10 минут. При перезапуске сервер восстанавливает всё автоматически. Доступ к данным — только у вас и ваших сотрудников.</p></details>
     <details class="reveal"><summary>Где физически хранятся данные?</summary><p>В текущей версии платформы — на серверах Render (США), резервные копии — в Telegram и GitHub. Копии шифруются. Мы работаем над переносом данных на серверы в Российской Федерации.</p></details>
-    <details class="reveal"><summary>Что входит в бесплатное обслуживание?</summary><p>При покупке любого тарифа мы даём 2 месяца полного обслуживания и 1 месяц поддержки бесплатно. Это значит — мы следим за работой сервера, делаем бэкапы, обновляем систему и отвечаем на вопросы.</p></details>
-    <details class="reveal"><summary>Есть ли ежемесячная подписка или комиссия?</summary><p>Нет. Вы платите один раз за лицензию. Комиссия с оборота не взимается. Обслуживание и поддержка первые 2 месяца и 1 месяц включены. Дальше — по желанию.</p></details>
+    <details class="reveal"><summary>Что входит в бесплатный период?</summary><p>При покупке любого тарифа мы даём <b>2 месяца полного обслуживания</b> и <b>1 месяц поддержки бесплатно</b>. Это значит — мы следим за работой сервера, делаем бэкапы, обновляем систему и отвечаем на вопросы.</p></details>
+    <details class="reveal"><summary>Как работает оплата и рассрочка?</summary>
+      <p>При покупке лицензии мы даём <b>2 месяца полного обслуживания бесплатно</b>. За это время вы пользуетесь платформой, мы следим за сервером, делаем резервные копии и помогаем с настройкой.</p>
+      <p>Если за 2 месяца вам всё понравится, можно <b>оплатить оставшуюся сумму сразу</b> или <b>заключить рассрочку</b> — на 3–6 месяцев, без удорожания. Условия рассрочки обсуждаются индивидуально.</p>
+      <p>Если не понравится — можно отказаться, вернув оплату за вычетом фактически оказанных услуг.</p>
+    </details>
+    <details class="reveal"><summary>Есть ли ежемесячная подписка или комиссия?</summary><p>Нет. Вы платите один раз за лицензию. Комиссия с оборота не взимается. Обслуживание и поддержка первые 2 месяца и 1 месяц включены. Дальше — по желанию, оплата сразу или рассрочка.</p></details>
     <details class="reveal"><summary>Можно ли попробовать перед покупкой?</summary><p>Да. Откройте демо-сайт — это живая система с тестовыми данными. Если понравится, напишите в Telegram и мы подберём тариф.</p></details>
   </div>
 </section>
@@ -401,7 +416,11 @@ footer a{color:var(--accent)}
   <div class="container">
     <div class="brand"><span class="logo">T</span><span>Torclix Backups</span></div>
     <div>© 2026 Torclix Backups · Платформа онлайн-записи для бизнеса услуг</div>
-    <div style="margin-top:8px"><a href="/privacy.html">Политика обработки персональных данных</a></div>
+    <div class="links">
+      <a href="/privacy.html">Политика ПД</a>
+      <a href="/oferta.html">Оферта</a>
+      <a href="https://t.me/nikita_seton" target="_blank" rel="noopener">Telegram</a>
+    </div>
   </div>
 </footer>
 
@@ -415,4 +434,4 @@ footer a{color:var(--accent)}
 })();
 </script>
 </body>
-    </html>
+  </html>
