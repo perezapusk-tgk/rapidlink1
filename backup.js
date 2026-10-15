@@ -188,15 +188,23 @@ function start(opts) {
   if (!provs.length) { console.warn('!!! Резервные копии НЕ настроены (нужны BACKUP_PASSPHRASE от 12 символов и Telegram или GitHub): данные могут пропасть при перезапуске.'); return; }
   console.log('→ Резервные копии: ' + provs.map(function (p) { return p.name; }).join(', ') + ' (шифрование включено)');
   state.started = true;
-  setTimeout(function () { run(true, 'start').catch(function (e) { console.error('[backup]', e.message); }); }, 15000);
-  setInterval(function () { run(false, '').catch(function (e) { console.error('[backup]', e.message); }); }, 20000).unref();
-  let stopping = false;
-  function shutdown() {
-    if (stopping) return; stopping = true;
-    const t = setTimeout(function () { process.exit(0); }, 20000);
-    run(true, 'shutdown').catch(function () {}).then(function () { clearTimeout(t); process.exit(0); });
-  }
-  process.on('SIGTERM', shutdown); process.on('SIGINT', shutdown);
+  // ↓↓↓ ИЗМЕНЕНО: убран форсированный бэкап при старте ↓↓↓
+  // setTimeout(function () { run(true, 'start').catch(function (e) { console.error('[backup]', e.message); }); }, 15000);
+  // ↑↑↑ было раньше — теперь только по изменениям ↑↑↑
+
+  // ↓↓↓ ИЗМЕНЕНО: 20 сек → 60 сек ↓↓↓
+  setInterval(function () { run(false, '').catch(function (e) { console.error('[backup]', e.message); }); }, 60000).unref();
+  // ↑↑↑ было 20000 (20 сек), стало 60000 (60 сек) ↑↑↑
+
+  // ↓↓↓ ИЗМЕНЕНО: убран форсированный бэкап при остановке ↓↓↓
+  // let stopping = false;
+  // function shutdown() {
+  //   if (stopping) return; stopping = true;
+  //   const t = setTimeout(function () { process.exit(0); }, 20000);
+  //   run(true, 'shutdown').catch(function () {}).then(function () { clearTimeout(t); process.exit(0); });
+  // }
+  // process.on('SIGTERM', shutdown); process.on('SIGINT', shutdown);
+  // ↑↑↑ было раньше — теперь Render сам решает, когда останавливать ↑↑↑
 }
 
 function status() {
