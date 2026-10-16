@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Запись онлайн — Torclix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/styles-fix.css">
+<style>
+:root{
+  --bg:#070b0e;--bg-2:#0b1216;--bg-elev:#101a1e;--bg-sunken:#0a1114;
+  --card:rgba(255,255,255,.03);--card-hover:rgba(255,255,255,.055);
+  --line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);--line-strong:rgba(255,255,255,.22);
+  --ink:#eaf2f0;--mute:#8a9a96;--mute-2:#5d6b68;
+  --accent:#2dd4bf;--accent-2:#22d3ee;--accent-glow:rgba(45,212,191,.35);
+  --accent-fg:#04120f;--accent-dim:rgba(45,212,191,.12);--accent-strong:rgba(45,212,191,.5);
+  --ok:#4ade80;--ok-dim:rgba(74,222,128,.12);--ok-strong:rgba(74,222,128,.4);
+  --warn:#f59e0b;--warn-dim:rgba(245,158,11,.12);
+  --danger:#f87171;--danger-dim:rgba(248,113,113,.12);
+}
+[data-theme="light"]{
+  --bg:#f5f8f7;--bg-2:#ffffff;--bg-elev:#ffffff;--bg-sunken:#f0f4f3;
+  --card:#ffffff;--card-hover:#ffffff;
+  --line:rgba(10,20,20,.08);--line-2:rgba(10,20,20,.14);--line-strong:rgba(10,20,20,.22);
+  --ink:#0a1412;--mute:#4b5b57;--mute-2:#7a8a86;
+  --accent:#0d9488;--accent-2:#0891b2;--accent-fg:#ffffff;--accent-dim:rgba(13,148,136,.10);--accent-strong:rgba(13,148,136,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font:16px/1.6 'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  padding-bottom:100px;
+}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--accent);color:var(--accent-fg)}
+button,input,select,textarea{font-family:inherit}
+
+.bg-aura{position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden}
+.bg-aura::before,.bg-aura::after{content:"";position:absolute;border-radius:50%;filter:blur(120px);opacity:.45}
+.bg-aura::before{width:600px;height:600px;top:-200px;left:-150px;background:radial-gradient(circle,var(--accent-glow),transparent 70%);animation:float1 18s ease-in-out infinite}
+.bg-aura::after{width:700px;height:700px;bottom:-250px;right:-200px;background:radial-gradient(circle,rgba(34,211,238,.22),transparent 70%);animation:float2 22s ease-in-out infinite}
+@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(80px,60px)}}
+@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-70px,-50px)}}
+.bg-grid{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 0%,#000 20%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 20%,transparent 75%);opacity:.35}
+
+nav{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+nav .wrap{max-width:1000px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1rem;letter-spacing:-.01em}
+.brand .pulse{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px var(--ok);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.brand-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+nav .btn{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--accent-fg);padding:9px 16px;border-radius:10px;font-weight:700;font-size:.85rem;border:none;cursor:pointer;box-shadow:0 6px 22px -8px var(--accent-glow);transition:transform .2s}
+nav .btn:hover{transform:translateY(-1px)}
+
+.hero{max-width:1000px;margin:0 auto;padding:60px 20px 20px;position:relative}
+.hero .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.76rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+.hero .eyebrow::before{content:"";width:22px;height:1px;background:var(--accent)}
+.hero h1{font-size:clamp(2rem,6vw,3.4rem);line-height:1.08;font-weight:800;letter-spacing:-.03em;max-width:20ch;margin-bottom:18px}
+.hero h1 .grad{background:linear-gradient(135deg,var(--accent) 20%,var(--accent-2) 80%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:inline-block}
+.hero .lede{color:var(--mute);font-size:clamp(1rem,2.2vw,1.12rem);max-width:52ch;line-height:1.6;margin-bottom:28px}
+.hero .badges{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.hero .badge-pill{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line-2);padding:9px 16px;border-radius:999px;font-size:.86rem;color:var(--mute);backdrop-filter:blur(8px)}
+.hero .badge-pill b{color:var(--ink);font-weight:700}
+.hero .badge-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+
+.wizard-wrap{max-width:1000px;margin:0 auto;padding:20px 20px 60px}
+.steps-indicator{display:flex;gap:8px;margin:30px 0 24px}
+.step-dot{flex:1;text-align:center;position:relative;padding:14px 8px 10px;font-size:.8rem;color:var(--mute-2);font-weight:600;background:var(--card);border:1px solid var(--line);border-radius:14px;transition:all .3s;backdrop-filter:blur(8px)}
+.step-dot::before{content:attr(data-n);display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--bg-sunken);border:1px solid var(--line-2);margin:0 auto 8px;font-weight:700;color:var(--mute-2);font-size:.82rem;transition:all .3s}
+.step-dot.active{color:var(--ink);border-color:var(--accent-strong);background:var(--accent-dim)}
+.step-dot.active::before{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--accent-fg);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-dim)}
+.step-dot.done{border-color:var(--ok-strong);background:var(--ok-dim);color:var(--ok)}
+.step-dot.done::before{background:var(--ok);color:#04120f;border-color:var(--ok);content:"✓"}
+@media(max-width:560px){.step-dot{font-size:.72rem;padding:10px 4px 8px}.step-dot::before{width:22px;height:22px;font-size:.75rem}}
+
+.panel-box{background:var(--card);border:1px solid var(--line-2);border-radius:22px;padding:30px;backdrop-filter:blur(12px);position:relative;overflow:hidden;box-shadow:0 30px 80px -40px rgba(0,0,0,.4)}
+.panel-box h2{font-size:clamp(1.2rem,3vw,1.45rem);font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.panel-box .hint{color:var(--mute);font-size:.9rem;margin-bottom:22px;line-height:1.55}
+
+.panel-box label{display:block;font-size:.82rem;font-weight:600;color:var(--mute);margin:0 0 6px;letter-spacing:.02em}
+.panel-box .input,.panel-box input[type="text"],.panel-box input[type="tel"],.panel-box input[type="date"],.panel-box select{width:100%;padding:13px 15px;border:1px solid var(--line-2);border-radius:12px;background:var(--bg-sunken);color:var(--ink);font-size:.95rem;transition:border-color .2s,box-shadow .2s;outline:none}
+.panel-box .input:focus,.panel-box input:focus,.panel-box select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.row-2{grid-template-columns:1fr}}
+.field{margin-bottom:14px}
+
+#calcInputWrap{margin-bottom:18px}
+.car-help{font-size:.8rem;color:var(--mute-2);margin-top:8px}
+.class-pick{margin-top:14px}
+.class-pick.need select{border-color:var(--warn);box-shadow:0 0 0 3px var(--warn-dim)}
+
+.class-tag{display:inline-flex;align-items:center;gap:10px;margin-top:6px;padding:10px 16px;border-radius:14px;background:var(--bg-sunken);color:var(--mute);font-size:.88rem;font-weight:600;border:1px solid var(--line);transition:all .3s}
+.class-tag.detected{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-strong);box-shadow:0 0 0 3px var(--accent-dim)}
+.class-tag.detected::before{content:"✓ ";font-weight:800}
+
+.svc-list{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.svc-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--bg-sunken);cursor:pointer;transition:all .25s cubic-bezier(.2,.7,.3,1);user-select:none}
+.svc-row:hover{border-color:var(--accent-strong);transform:translateY(-1px)}
+.svc-row.checked{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent 70%);box-shadow:0 0 0 3px var(--accent-dim)}
+.svc-row .left{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
+.checkbox{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line-strong);flex-shrink:0;position:relative;transition:all .2s}
+.svc-row.checked .checkbox{background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:var(--accent)}
+.svc-row.checked .checkbox::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--accent-fg);font-weight:800}
+.svc-row .svc-name{font-weight:600;font-size:.94rem;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.svc-row .price{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.92rem;color:var(--accent);white-space:nowrap}
+
+.day-chips{display:flex;gap:8px;overflow-x:auto;padding:6px 2px 14px;scrollbar-width:none;-ms-overflow-style:none}
+.day-chips::-webkit-scrollbar{display:none}
+.day-chip{flex-shrink:0;padding:12px 18px;border-radius:14px;border:1px solid var(--line);background:var(--bg-sunken);font-size:.85rem;text-align:center;cursor:pointer;color:var(--mute);min-width:82px;transition:all .25s}
+.day-chip:hover{border-color:var(--accent-strong);color:var(--ink)}
+.day-chip .d{font-size:.72rem;color:var(--mute-2);display:block;margin-top:4px;font-family:'JetBrains Mono',monospace}
+.day-chip.active{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent);color:var(--ink);box-shadow:0 0 0 3px var(--accent-dim)}
+.day-chip.active .d{color:var(--accent)}
+
+.nearest{margin-top:16px;padding:16px 20px;border-radius:14px;background:var(--accent-dim);border:1px solid var(--accent-strong);font-size:.92rem;color:var(--ink)}
+.nearest b{color:var(--accent);cursor:pointer;text-decoration:underline;font-family:'JetBrains Mono',monospace;font-weight:700}
+
+.slot-group{margin-top:24px}
+.slot-group h4{font-size:.78rem;color:var(--mute-2);margin-bottom:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.slot{padding:14px 8px;border-radius:12px;border:1px solid var(--line);background:var(--bg-sunken);font-size:.88rem;text-align:center;cursor:pointer;color:var(--mute);font-family:'JetBrains Mono',monospace;font-weight:700;transition:all .2s;position:relative}
+.slot:hover:not(.full){border-color:var(--accent-strong);color:var(--ink);transform:translateY(-1px)}
+.slot .cap{display:block;font-size:.68rem;color:var(--mute-2);margin-top:4px;font-weight:500;font-family:'Manrope',sans-serif}
+.slot.selected{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),transparent);color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.slot.selected .cap{color:var(--accent)}
+.slot.full{opacity:.3;cursor:not-allowed;text-decoration:line-through}
+
+.summary{background:var(--bg-sunken);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:20px}
+.summary-row{display:flex;justify-content:space-between;font-size:.92rem;padding:8px 0;color:var(--mute)}
+.summary-row span:last-child{color:var(--ink);font-weight:600}
+.summary-row.total{border-top:1px solid var(--line);margin-top:10px;padding-top:16px;font-weight:800;color:var(--ink);font-size:1.15rem}
+.summary-row.total span:last-child{font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:1.3rem}
+
+.panel-actions{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:12px;flex-wrap:wrap}
+.btn{font-family:inherit;font-weight:700;border:none;border-radius:12px;padding:14px 24px;font-size:.95rem;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:not(.btn-ghost){background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--accent-fg);box-shadow:0 12px 32px -12px var(--accent-glow)}
+.btn:not(.btn-ghost):hover:not(:disabled){transform:translateY(-2px);box-shadow:0 18px 40px -14px var(--accent-glow)}
+.btn-ghost{background:transparent;border:1px solid var(--line-2);color:var(--ink)}
+.btn-ghost:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+@media(max-width:560px){.panel-actions{flex-direction:column-reverse}.panel-actions .btn{width:100%}}
+
+.consent{display:flex;gap:12px;align-items:flex-start;font-size:.86rem;color:var(--mute);margin:16px 0 4px;cursor:pointer;line-height:1.5;padding:14px;background:var(--bg-sunken);border:1px solid var(--line);border-radius:12px}
+.consent input{width:auto;margin-top:3px;flex-shrink:0;accent-color:var(--accent);width:18px;height:18px}
+.consent a{color:var(--accent);text-decoration:underline}
+
+.msg{min-height:1.4em;font-size:.88rem;margin-top:12px;color:var(--mute)}
+.msg.err{color:var(--danger)}
+.msg.ok{color:var(--ok)}
+
+.confirm-box{text-align:center;padding:20px 0}
+.confirm-box .check{font-size:4.5rem;color:var(--ok);margin-bottom:16px;display:inline-block;animation:pop .5s cubic-bezier(.2,.7,.3,1)}
+@keyframes pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.confirm-box h2{font-size:1.5rem;font-weight:800;margin-bottom:10px}
+.confirm-box .id{font-family:'JetBrains Mono',monospace;font-size:1.6rem;color:var(--accent);margin:20px 0;font-weight:700;letter-spacing:.04em;background:var(--accent-dim);padding:12px 20px;border-radius:14px;display:inline-block;border:1px solid var(--accent-strong)}
+.confirm-box .hint{max-width:44ch;margin:0 auto 20px;color:var(--mute);font-size:.92rem}
+
+.lookup{max-width:1000px;margin:20px auto 0;padding:0 20px}
+.lookup-toggle{font-size:.9rem;color:var(--mute);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;padding:10px 0}
+.lookup-toggle:hover{color:var(--accent)}
+.lookup-panel{margin-top:14px;background:var(--card);border:1px solid var(--line-2);border-radius:18px;padding:24px;display:none;backdrop-filter:blur(12px)}
+.lookup-panel.open{display:block;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.lookup-result{margin-top:16px;padding:16px 18px;background:var(--bg-sunken);border-radius:14px;font-size:.9rem;color:var(--mute);border:1px solid var(--line)}
+.b-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.b-row:last-child{border-bottom:none}
+.b-row .mono{font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:700}
+.text-dim2{color:var(--mute-2);font-size:.85rem}
+.btn-small{padding:8px 14px;font-size:.82rem;border-radius:8px}
+.btn-danger{background:linear-gradient(135deg,#f87171,#ef4444) !important;color:#fff !important;box-shadow:0 8px 20px -8px rgba(248,113,113,.5) !important}
+
+.sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:35;background:color-mix(in srgb,var(--bg-2) 96%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line-2);padding:14px 16px;display:none}
+.sticky-bar.show{display:block;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sticky-bar .wrap{max-width:1000px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sticky-bar .total{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem;color:var(--accent)}
+.sticky-bar .total span:first-child{color:var(--mute);font-family:'Manrope',sans-serif;font-weight:500;font-size:.88rem;margin-right:6px}
+
+footer{border-top:1px solid var(--line);padding:30px 20px;font-size:.82rem;color:var(--mute-2);max-width:1000px;margin:40px auto 0}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="bg-aura"></div>
+<div class="bg-grid"></div>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="pulse"></span><span class="brand-name" id="brandName">Torclix</span></div>
+    <button class="btn" id="topBookBtn" type="button">Записаться</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">Онлайн-запись · без звонков</div>
+  <h1 id="heroTitle">Загрузка…</h1>
+  <p class="lede" id="heroLede">Загружаем информацию…</p>
+  <div class="badges">
+    <div class="badge-pill"><span class="dot"></span><b id="capacityNum">2</b> записи в час</div>
+    <div class="badge-pill" id="cityBadge"></div>
+    <div class="badge-pill">⚡ Мгновенное подтверждение</div>
+  </div>
+</header>
+
+<div class="wizard-wrap">
+  <div class="steps-indicator">
+    <div class="step-dot active" data-n="1" id="dot1">Услуги</div>
+    <div class="step-dot" data-n="2" id="dot2">Время</div>
+    <div class="step-dot" data-n="3" id="dot3">Контакты</div>
+  </div>
+
+  <div class="panel-box" id="step1">
+    <h2>Выберите услуги</h2>
+    <p class="hint" id="step1Hint">Загрузка…</p>
+    <div id="calcInputWrap"></div>
+    <div id="classTag" class="class-tag"><span id="classTagText">Начните вводить</span></div>
+    <div class="svc-list" id="svcList"></div>
+    <div class="panel-actions">
+      <span></span>
+      <button class="btn" id="toStep2" type="button" disabled>Далее — выбрать время</button>
+    </div>
+  </div>
+
+  <div class="panel-box" id="step2" style="display:none;">
+    <h2>Выберите дату и время</h2>
+    <p class="hint">Показываем, сколько мест осталось на каждый час</p>
+    <div class="day-chips" id="dayChips"></div>
+    <div id="nearestWrap"></div>
+    <div id="slotGroups"></div>
+    <div class="panel-actions">
+      <button class="btn btn-ghost" id="backTo1" type="button">Назад</button>
+      <button class="btn" id="toStep3" type="button" disabled>Далее — контакты</button>
+    </div>
+  </div>
+
+  <div class="panel-box" id="step3" style="display:none;">
+    <h2>Контакты и подтверждение</h2>
+    <p class="hint">Оплата на месте</p>
+    <div class="summary" id="summaryBox"></div>
+    <div class="row-2">
+      <div class="field"><label for="name">Имя</label><input id="name" class="input" type="text" required placeholder="Как к вам обращаться" maxlength="100" autocomplete="name"></div>
+      <div class="field"><label for="phone">Телефон</label><input id="phone" class="input" type="tel" required placeholder="+7 ..." maxlength="30" autocomplete="tel"></div>
+    </div>
+    <label class="consent" for="consent"><input id="consent" type="checkbox"><span>Я даю согласие на обработку моих персональных данных (имя, телефон) для оформления и выполнения записи на условиях <a href="/privacy.html" target="_blank" rel="noopener">политики обработки персональных данных</a>.</span></label>
+    <div id="status" class="msg" role="alert"></div>
+    <div class="panel-actions">
+      <button class="btn btn-ghost" id="backTo2" type="button">Назад</button>
+      <button class="btn" id="confirmBtn" type="button">Подтвердить запись</button>
+    </div>
+  </div>
+
+  <div class="panel-box" id="stepDone" style="display:none;">
+    <div class="confirm-box">
+      <div class="check">✓</div>
+      <h2>Запись подтверждена</h2>
+      <div class="id" id="bookingIdOut"></div>
+      <p class="hint">Сохраните номер записи — по нему и телефону можно найти или отменить запись в блоке «Моя запись» ниже.</p>
+      <button class="btn" id="newBookingBtn" type="button">Записать ещё раз</button>
+    </div>
+  </div>
+</div>
+
+<div class="lookup">
+  <button class="lookup-toggle" id="lookupToggle" type="button">Моя запись — найти или отменить</button>
+  <div class="lookup-panel" id="lookupPanel">
+    <div class="row-2">
+      <div class="field"><label for="lookupPhone">Телефон</label><input id="lookupPhone" class="input" type="tel" placeholder="+7 ..." maxlength="30"></div>
+      <div class="field" style="display:flex;align-items:flex-end;"><button class="btn" id="lookupBtn" type="button" style="width:100%;">Найти</button></div>
+    </div>
+    <div id="lookupResult"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div id="footerName">Torclix</div>
+    <div>Круглосуточно, без выходных</div>
+  </div>
+</footer>
+
+<div class="sticky-bar" id="stickyBar">
+  <div class="wrap">
+    <div class="total"><span>Итого:</span><span id="stickyAmount">0 ₽</span></div>
+    <button class="btn" id="stickyBtn" type="button">Далее</button>
+  </div>
+</div>
+
+<script src="/cars.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ============ TELEGRAM MINI APP ============ */
+  function initTelegram() {
+    try {
+      var tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+      if (!tg) return;
+      tg.ready();
+      tg.expand();
+      var user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+      if (user && user.first_name) {
+        var nameInput = document.getElementById('name');
+        if (nameInput && !nameInput.value) {
+          nameInput.value = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+        }
+      }
+    } catch (e) { console.warn('tg init:', e.message); }
+  }
+
+  var API = '';
+  var CATALOG = null, svcByClass = {}, selectedClass = null, classLocked = false, carText = '';
+  var selectedServices = new Set(), selectedDate = null, selectedHour = null;
+  var bound = false, isWash = false;
+  var TENANT = null;
+  try { TENANT = new URLSearchParams(location.search).get('tenant'); } catch (e) {}
+
+  var BRAND = { title: 'Torclix' };
+  var FALLBACK = [
+    { c: 0, k: ['мотоцикл','скутер','мопед','питбайк','ducati','harley'] },
+    { c: 1, k: ['квадроцикл','atv','polaris','can-am','cfmoto','grizzly','снегоход'] },
+    { c: 2, k: ['ваз','гранта','vesta','калина','solaris','солярис','rio','logan','polo','focus','octavia','corolla','camry'] },
+    { c: 3, k: ['creta','крета','qashqai','кашкай','sportage','tucson','rav4','tiguan','duster','tiggo','kaptur'] },
+    { c: 4, k: ['land cruiser','крузер','patrol','уаз','нива','niva','x5','prado','пикап'] },
+    { c: 5, k: ['transporter','sprinter','спринтер','transit','газель','largus','ларгус'] },
+    { c: 6, k: ['прицеп','trailer'] }
+  ];
+  var CLASS_HINTS = ['мотоцикл, скутер', 'квадроцикл, снегоход', 'седан, хэтчбек, универсал', 'кроссовер, паркетник', 'внедорожник, пикап', 'минивэн, микроавтобус, фургон', 'прицеп'];
+  var ST = { confirmed: 'Ожидает', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменена' };
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function rub(n) { return (Number(n) || 0).toLocaleString('ru-RU') + ' ₽'; }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function fmtDate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function say(el, cls, text) { el.className = 'msg' + (cls ? ' ' + cls : ''); el.textContent = text; }
+  function withTenant(path) {
+    if (!TENANT) return path;
+    return path + (path.indexOf('?') === -1 ? '?' : '&') + 'tenant=' + encodeURIComponent(TENANT);
+  }
+
+  function api(path, opts, timeoutMs) {
+    opts = opts || {};
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = null;
+    if (ctl) { opts.signal = ctl.signal; timer = setTimeout(function () { ctl.abort(); }, timeoutMs || 30000); }
+    return fetch(API + withTenant(path), opts).then(function (res) {
+      if (timer) clearTimeout(timer);
+      return res.json().catch(function () { return null; }).then(function (data) {
+        if (!res.ok) { var err = new Error((data && data.error) || ('http_' + res.status)); err.status = res.status; err.data = data; throw err; }
+        return data;
+      });
+    }, function (e) { if (timer) clearTimeout(timer); throw e; });
+  }
+  function apiRetry(path, tries, delay) {
+    return api(path, undefined, 25000).catch(function (e) {
+      if (tries <= 1 || (e.status && e.status >= 400 && e.status < 500)) throw e;
+      return new Promise(function (r) { setTimeout(r, delay); }).then(function () { return apiRetry(path, tries - 1, delay); });
+    });
+  }
+
+  function boot() {
+    $('step1Hint').textContent = 'Загружаем каталог услуг…';
+    var slow = setTimeout(function () {
+      $('heroLede').textContent = 'Сервер просыпается после простоя, это может занять до минуты. Подождите, страница загрузится сама.';
+    }, 6000);
+    return apiRetry('/api/vertical', 8, 5000).then(function (cat) {
+      clearTimeout(slow);
+      CATALOG = cat;
+      $('brandName').textContent = cat.businessName || BRAND.title;
+      document.title = (cat.businessName || BRAND.title) + ' — запись онлайн';
+      $('footerName').textContent = (cat.businessName || BRAND.title) + (cat.city ? ' · ' + cat.city : '');
+      $('cityBadge').textContent = cat.city || '';
+      $('capacityNum').textContent = cat.capacity || 2;
+
+      var vc = cat.vertical_code || 'wash';
+      var heroByVertical = {
+        wash: { title: 'Мойка, которая сама знает цену вашего транспорта', lede: 'Введите марку и модель — система определит класс. Не нашлась — выберите класс сами.' },
+        barber: { title: 'Стрижка, которая подходит именно вам', lede: 'Выберите категорию и услугу.' },
+        massage: { title: 'Массаж, который снимает усталость', lede: 'Выберите тип массажа.' },
+        detailing: { title: 'Детейлинг, который возвращает автомобиль к жизни', lede: 'Выберите пакет.' },
+        tire: { title: 'Шиномонтаж без очередей', lede: 'Выберите радиус колёс.' }
+      };
+      var hero = heroByVertical[vc] || { title: cat.businessName || BRAND.title, lede: 'Запишитесь онлайн за минуту.' };
+      $('heroTitle').textContent = hero.title;
+      $('heroLede').textContent = hero.lede;
+
+      svcByClass = {};
+      (cat.services || []).forEach(function (s) {
+        if (!svcByClass[s.vehicle_class]) svcByClass[s.vehicle_class] = [];
+        svcByClass[s.vehicle_class].push(s);
+      });
+
+      isWash = (vc === 'wash');
+      $('step1Hint').textContent = isWash ? 'Введите марку и модель — класс определится автоматически, либо выберите его вручную.' : 'Выберите категорию.';
+      renderClassInputs();
+      renderSvcList();
+      goStep(1);
+      bindEvents();
+      initTelegram();
+    }).catch(function () {
+      clearTimeout(slow);
+      $('heroTitle').textContent = 'Не удалось загрузить';
+      $('heroLede').textContent = 'Сервер не ответил. Проверьте интернет и попробуйте ещё раз.';
+      $('step1').innerHTML = '<p class="hint" style="color:var(--danger);">Не удалось загрузить каталог услуг.</p><button class="btn" id="retryBtn" type="button" style="margin-top:14px;">Повторить</button>';
+      $('retryBtn').addEventListener('click', function () { location.reload(); });
+    });
+  }
+
+  function bindEvents() {
+    if (bound) return; bound = true;
+    $('toStep2').addEventListener('click', function () { goStep(2); });
+    $('backTo1').addEventListener('click', function () { goStep(1); });
+    $('toStep3').addEventListener('click', function () { if (selectedHour !== null) goStep(3); });
+    $('backTo2').addEventListener('click', function () { goStep(2); });
+    $('confirmBtn').addEventListener('click', confirmBooking);
+    $('newBookingBtn').addEventListener('click', resetWizard);
+    $('lookupToggle').addEventListener('click', function () { $('lookupPanel').classList.toggle('open'); });
+    $('lookupBtn').addEventListener('click', doLookup);
+    $('lookupPhone').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLookup(); });
+    $('topBookBtn').addEventListener('click', function () {
+      var inp = $('carModel') || $('classSelect');
+      if (inp) { inp.focus(); inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    });
+    $('stickyBtn').addEventListener('click', function () {
+      var st = getActiveStep();
+      if (st === 1) goStep(2);
+      else if (st === 2) { if (selectedHour !== null) goStep(3); }
+      else confirmBooking();
+    });
+  }
+
+  function classIdByIndex(i) {
+    var c = CATALOG.classes[i];
+    return c ? c.id : null;
+  }
+  function detectClass(text) {
+    var r = null;
+    if (window.RLCars) { try { r = window.RLCars.detect(text); } catch (e) { r = null; } }
+    if (r) return r;
+    var t = String(text || '').toLowerCase().trim();
+    if (!t) return null;
+    for (var i = 0; i < FALLBACK.length; i++) {
+      for (var j = 0; j < FALLBACK[i].k.length; j++) {
+        if (t.indexOf(FALLBACK[i].k[j]) !== -1) return { cls: FALLBACK[i].c, brand: null, model: FALLBACK[i].k[j], exact: false };
+      }
+    }
+    return { cls: null, brand: null, model: null };
+  }
+
+  function renderClassInputs() {
+    var wrap = $('calcInputWrap');
+    var hints = CATALOG.classes.length === CLASS_HINTS.length;
+    var opts = CATALOG.classes.map(function (c, i) {
+      return '<option value="' + esc(c.id) + '">' + esc(c.name) + (hints ? ' (' + esc(CLASS_HINTS[i]) + ')' : '') + '</option>';
+    }).join('');
+    var html = '';
+    if (isWash) {
+      html += '<label for="carModel">Марка и модель</label><input id="carModel" type="text" class="input" placeholder="Например: Hyundai Creta, Yamaha Grizzly, Газель" autocomplete="off" maxlength="100">' +
+        '<div class="car-help">Не нашли свою модель? Впишите как есть и выберите класс ниже.</div>';
+    }
+    html += '<div class="class-pick" id="classPick"><label for="classSelect">' + (isWash ? 'Класс транспорта' : 'Категория') + '</label>' +
+      '<select id="classSelect" class="input"><option value="">— выберите —</option>' + opts + '</select></div>';
+    wrap.innerHTML = html;
+    if (isWash) {
+      $('carModel').addEventListener('input', function () {
+        carText = $('carModel').value.trim();
+        if (!carText) { classLocked = false; }
+        if (classLocked) return;
+        var r = detectClass(carText);
+        var id = (r && r.cls !== null && r.cls !== undefined) ? classIdByIndex(r.cls) : null;
+        setClass(id, true, r);
+      });
+    }
+    $('classSelect').addEventListener('change', function () {
+      classLocked = !!this.value;
+      setClass(this.value ? parseInt(this.value, 10) : null, false, null);
+    });
+    renderClassTag(null);
+  }
+
+  function setClass(id, fromAuto, info) {
+    if (id !== selectedClass) selectedServices.clear();
+    selectedClass = id;
+    if ($('classSelect')) $('classSelect').value = id === null ? '' : String(id);
+    renderClassTag(fromAuto ? info : null);
+    renderSvcList();
+  }
+
+  function renderClassTag(info) {
+    var tag = $('classTag'), tagText = $('classTagText'), pick = $('classPick');
+    var typed = isWash && $('carModel') && $('carModel').value.trim();
+    if (!selectedClass) {
+      tag.className = 'class-tag';
+      if (typed) {
+        tagText.textContent = (info && info.brand ? 'Марка распознана, но модель нет — выберите класс из списка ниже' : 'Не нашли такую модель — выберите класс из списка ниже');
+        if (pick) pick.classList.add('need');
+      } else {
+        tagText.textContent = isWash ? 'Начните вводить марку/модель или выберите класс' : 'Выберите категорию';
+        if (pick) pick.classList.remove('need');
+      }
+      return;
+    }
+    if (pick) pick.classList.remove('need');
+    var cls = CATALOG.classes.filter(function (c) { return c.id === selectedClass; })[0];
+    if (!cls) { tag.className = 'class-tag'; tagText.textContent = 'Класс не распознан'; return; }
+    tag.className = 'class-tag detected';
+    tagText.textContent = cls.name + (classLocked ? ' (выбран вручную)' : ' — определён автоматически');
+  }
+
+  function renderSvcList() {
+    var list = $('svcList');
+    if (!selectedClass) { list.innerHTML = ''; updateStep1Btn(); updateSticky(); return; }
+    var svc = svcByClass[selectedClass] || [];
+    if (!svc.length) { list.innerHTML = '<p class="hint">Для этой категории пока нет услуг</p>'; updateStep1Btn(); return; }
+    list.innerHTML = svc.map(function (s) {
+      return '<div class="svc-row' + (selectedServices.has(s.id) ? ' checked' : '') + '" data-id="' + esc(s.id) + '" role="checkbox" tabindex="0" aria-checked="' + (selectedServices.has(s.id) ? 'true' : 'false') + '"><div class="left"><div class="checkbox"></div><span class="svc-name">' + esc(s.name) + '</span></div><div class="price">' + rub(s.price) + '</div></div>';
+    }).join('');
+    list.querySelectorAll('.svc-row').forEach(function (row) {
+      function toggle() {
+        var id = parseInt(row.getAttribute('data-id'), 10);
+        if (selectedServices.has(id)) selectedServices.delete(id); else selectedServices.add(id);
+        row.classList.toggle('checked');
+        row.setAttribute('aria-checked', selectedServices.has(id) ? 'true' : 'false');
+        updateStep1Btn(); updateSticky();
+      }
+      row.addEventListener('click', toggle);
+      row.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); } });
+    });
+    updateStep1Btn(); updateSticky();
+  }
+  function currentTotal() {
+    if (!selectedClass) return 0;
+    var sum = 0;
+    (svcByClass[selectedClass] || []).forEach(function (s) { if (selectedServices.has(s.id)) sum += s.price; });
+    return sum;
+  }
+  function updateStep1Btn() { $('toStep2').disabled = selectedServices.size === 0; }
+
+  function updateSticky() {
+    var bar = $('stickyBar');
+    var doneVisible = $('stepDone').style.display !== 'none';
+    var onStep1 = $('step1').style.display !== 'none';
+    if (!selectedServices.size || doneVisible || onStep1) { bar.classList.remove('show'); return; }
+    bar.classList.add('show');
+    $('stickyAmount').textContent = rub(currentTotal());
+    $('stickyBtn').textContent = getActiveStep() === 3 ? 'Подтвердить' : 'Далее';
+  }
+  function getActiveStep() {
+    if ($('step1').style.display !== 'none') return 1;
+    if ($('step2').style.display !== 'none') return 2;
+    if ($('step3').style.display !== 'none') return 3;
+    return 0;
+  }
+  function goStep(n) {
+    [1, 2, 3].forEach(function (i) {
+      $('step' + i).style.display = (i === n) ? '' : 'none';
+      var dot = $('dot' + i);
+      dot.classList.toggle('active', i === n);
+      dot.classList.toggle('done', i < n);
+    });
+    $('stepDone').style.display = 'none';
+    if (n === 2) renderStep2();
+    if (n === 3) renderSummary();
+    updateSticky();
+  }
+
+  function next7Days() {
+    var days = [], today = new Date();
+    for (var i = 0; i < 7; i++) { var d = new Date(today); d.setDate(today.getDate() + i); days.push(d); }
+    return days;
+  }
+  function renderStep2() {
+    if (!selectedDate) selectedDate = fmtDate(new Date());
+    var chips = $('dayChips'), days = next7Days();
+    chips.innerHTML = days.map(function (d, i) {
+      var iso = fmtDate(d);
+      var label = i === 0 ? 'Сегодня' : (i === 1 ? 'Завтра' : d.toLocaleDateString('ru-RU', { weekday: 'short' }));
+      return '<div class="day-chip ' + (iso === selectedDate ? 'active' : '') + '" data-date="' + iso + '">' + esc(label) + '<span class="d">' + d.getDate() + '</span></div>';
+    }).join('');
+    chips.querySelectorAll('.day-chip').forEach(function (ch) {
+      ch.addEventListener('click', function () { selectedDate = ch.getAttribute('data-date'); selectedHour = null; renderStep2(); });
+    });
+    $('slotGroups').innerHTML = '<p class="hint">Загружаем время…</p>';
+    $('nearestWrap').innerHTML = '';
+    return api('/api/slots?date=' + encodeURIComponent(selectedDate)).then(function (data) {
+      var remaining = {};
+      data.slots.forEach(function (s) { remaining[s.hour] = s.remaining; });
+      renderSlotGroups(remaining);
+    }).catch(function () {
+      $('slotGroups').innerHTML = '<p class="hint" style="color:var(--danger);">Не удалось загрузить время. Нажмите «Назад» и повторите.</p>';
+    });
+  }
+  var TIME_GROUPS = [
+    { label: 'Утро', from: 6, to: 11 }, { label: 'День', from: 12, to: 17 },
+    { label: 'Вечер', from: 18, to: 23 }, { label: 'Ночь', from: 0, to: 5 }
+  ];
+  function isPast(h) {
+    var now = new Date();
+    return selectedDate === fmtDate(now) && h <= now.getHours();
+  }
+  function renderSlotGroups(remaining) {
+    var wrap = $('slotGroups'); wrap.innerHTML = '';
+    var nearest = null;
+    for (var h0 = 0; h0 < 24; h0++) { if ((remaining[h0] || 0) > 0 && !isPast(h0)) { nearest = h0; break; } }
+    if (selectedHour !== null && (isPast(selectedHour) || (remaining[selectedHour] || 0) <= 0)) selectedHour = null;
+    if (nearest === null) {
+      $('nearestWrap').innerHTML = '<div class="nearest">На эту дату свободных мест нет.</div>';
+    } else if (selectedHour === null) {
+      $('nearestWrap').innerHTML = '<div class="nearest">Ближайшее время: <b id="nearestPick">' + pad(nearest) + ':00</b></div>';
+      $('nearestPick').addEventListener('click', function () { selectedHour = nearest; renderStep2(); });
+    } else { $('nearestWrap').innerHTML = ''; }
+    TIME_GROUPS.forEach(function (group) {
+      var div = document.createElement('div');
+      div.className = 'slot-group';
+      div.innerHTML = '<h4>' + esc(group.label) + '</h4><div class="slots"></div>';
+      var slotsEl = div.querySelector('.slots');
+      for (var h = group.from; h <= group.to; h++) {
+        (function (h) {
+          var rem = remaining[h] || 0, past = isPast(h), full = rem <= 0 || past;
+          var el = document.createElement('div');
+          el.className = 'slot' + (full ? ' full' : '') + (selectedHour === h ? ' selected' : '');
+          el.innerHTML = pad(h) + ':00<span class="cap">' + (past ? 'прошло' : (rem <= 0 ? 'занято' : 'ещё ' + rem)) + '</span>';
+          if (!full) el.addEventListener('click', function () { selectedHour = h; renderStep2(); });
+          slotsEl.appendChild(el);
+        })(h);
+      }
+      wrap.appendChild(div);
+    });
+    $('toStep3').disabled = (selectedHour === null);
+    updateSticky();
+  }
+
+  function renderSummary() {
+    var svc = svcByClass[selectedClass] || [];
+    var rows = svc.filter(function (s) { return selectedServices.has(s.id); }).map(function (s) {
+      return '<div class="summary-row"><span>' + esc(s.name) + '</span><span>' + rub(s.price) + '</span></div>';
+    }).join('');
+    var cls = CATALOG.classes.filter(function (c) { return c.id === selectedClass; })[0];
+    var dateLabel = new Date(selectedDate + 'T12:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    $('summaryBox').innerHTML =
+      (carText ? '<div class="summary-row"><span>Транспорт</span><span>' + esc(carText) + '</span></div>' : '') +
+      '<div class="summary-row"><span>Категория</span><span>' + esc(cls ? cls.name : '') + '</span></div>' + rows +
+      '<div class="summary-row"><span>Дата и время</span><span>' + esc(dateLabel) + ', ' + pad(selectedHour) + ':00</span></div>' +
+      '<div class="summary-row total"><span>Итого</span><span>' + rub(currentTotal()) + '</span></div>';
+  }
+
+  function confirmBooking() {
+    var name = $('name').value.trim(), phone = $('phone').value.trim();
+    if (!name || !phone) { say($('status'), 'err', 'Заполните имя и телефон.'); return; }
+    if (phone.replace(/\D/g, '').length < 10) { say($('status'), 'err', 'Проверьте номер телефона.'); return; }
+    if (!$('consent').checked) { say($('status'), 'err', 'Поставьте галочку согласия на обработку персональных данных.'); return; }
+    var btn = $('confirmBtn');
+    btn.disabled = true; say($('status'), '', 'Отправляем…');
+    api('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name, phone: phone, car: carText, consent: true, vehicle_class_id: selectedClass,
+        service_ids: Array.from(selectedServices), date: selectedDate, hour: selectedHour
+      })
+    }, 40000).then(function (res) {
+      $('bookingIdOut').textContent = '№ ' + res.booking.booking_code;
+      [1, 2, 3].forEach(function (i) { $('step' + i).style.display = 'none'; });
+      $('stepDone').style.display = '';
+      document.querySelectorAll('.step-dot').forEach(function (d) { d.classList.add('done'); });
+      say($('status'), '', '');
+      updateSticky();
+    }).catch(function (e) {
+      var code = e.data && e.data.error;
+      if (code === 'slot_full') {
+        say($('status'), 'err', 'Это время только что заполнилось — выберите другое.');
+        selectedHour = null; goStep(2);
+      } else if (code === 'slot_closed') {
+        say($('status'), 'err', 'В это время мы не работаем — выберите другое.');
+        selectedHour = null; goStep(2);
+      } else if (code === 'too_many_requests') {
+        say($('status'), 'err', 'Слишком много попыток. Подождите минуту.');
+      } else if (code === 'invalid_services') {
+        say($('status'), 'err', 'Услуги изменились. Вернитесь назад и выберите заново.');
+      } else if (code === 'consent_required') {
+        say($('status'), 'err', 'Нужно согласие на обработку персональных данных.');
+      } else if (code === 'tenant_not_found') {
+        say($('status'), 'err', 'Эта страница записи больше не работает.');
+      } else {
+        say($('status'), 'err', 'Не удалось отправить запись. Проверьте интернет и попробуйте ещё раз.');
+      }
+    }).then(function () { btn.disabled = false; });
+  }
+
+  function resetWizard() {
+    selectedServices.clear(); selectedHour = null; selectedDate = null; classLocked = false; carText = '';
+    selectedClass = null;
+    if ($('carModel')) $('carModel').value = '';
+    if ($('classSelect')) $('classSelect').value = '';
+    $('name').value = ''; $('phone').value = ''; $('consent').checked = false;
+    say($('status'), '', '');
+    renderClassTag(null); renderSvcList(); goStep(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function doLookup() {
+    var phone = $('lookupPhone').value.trim(), box = $('lookupResult');
+    if (phone.replace(/\D/g, '').length < 10) { box.innerHTML = '<div class="lookup-result">Введите номер телефона.</div>'; return; }
+    box.innerHTML = '<div class="lookup-result">Ищем…</div>';
+    api('/api/bookings?phone=' + encodeURIComponent(phone)).then(function (res) {
+      var list = (res.bookings || []).slice(0, 20);
+      if (!list.length) { box.innerHTML = '<div class="lookup-result">Записей с таким номером не найдено.</div>'; return; }
+      box.innerHTML = '<div class="lookup-result">' + list.map(function (b) {
+        return '<div class="b-row"><div><b class="mono">' + esc(b.booking_code) + '</b> · ' + esc(b.date) + ', ' + pad(b.hour) + ':00' +
+          (b.car ? ' · ' + esc(b.car) : '') + '<br><span class="text-dim2">' + esc(ST[b.status] || b.status) + ' · ' + rub(b.total) + '</span></div>' +
+          (b.status === 'confirmed' ? '<button class="btn btn-small btn-danger" type="button" data-cancel="' + esc(b.booking_code) + '">Отменить</button>' : '') + '</div>';
+      }).join('') + '</div>';
+      box.querySelectorAll('button[data-cancel]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (!confirm('Отменить запись ' + btn.getAttribute('data-cancel') + '?')) return;
+          btn.disabled = true;
+          api('/api/bookings/' + encodeURIComponent(btn.getAttribute('data-cancel')), {
+            method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: phone })
+          }).then(doLookup).catch(function () { alert('Не удалось отменить запись. Попробуйте ещё раз.'); btn.disabled = false; });
+        });
+      });
+    }).catch(function () { box.innerHTML = '<div class="lookup-result">Не удалось выполнить поиск. Попробуйте ещё раз.</div>'; });
+  }
+
+  boot();
+})();
+</script>
+<script src="/theme.js"></script>
+</body>
+</html>
