@@ -1,0 +1,21 @@
+# Раз в час будит сервис на бесплатном Render и рассылает напоминания клиентам.
+# Нужны два секрета репозитория (Settings -> Secrets and variables -> Actions):
+#   APP_URL  — адрес сервиса, например https://rapidlink1.onrender.com
+#   CRON_KEY — тот же случайный ключ (16+ символов), что в переменной CRON_KEY на Render
+name: reminders
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Send reminders
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_KEY: ${{ secrets.CRON_KEY }}
+        run: |
+          test -n "$APP_URL" && test -n "$CRON_KEY" || { echo "Не заданы секреты APP_URL и CRON_KEY"; exit 1; }
+          curl -fsS -m 150 --retry 3 --retry-delay 20 --retry-all-errors -X POST -H "x-cron-key: $CRON_KEY" "${APP_URL%/}/api/cron/reminders"
